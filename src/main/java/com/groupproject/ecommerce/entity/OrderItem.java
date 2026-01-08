@@ -1,0 +1,38 @@
+package com.groupproject.ecommerce.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "order_items")
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long orderItemId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orderId", nullable = false)
+    private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "productId", nullable = false)
+    private Product product;
+
+    @Column(nullable = false, length = 200)
+    private String productNameSnapshot;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal unitPriceSnapshot;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal lineTotal;
+}
