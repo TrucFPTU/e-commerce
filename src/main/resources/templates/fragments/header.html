@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <style>
+        .header {
+            background-color: #ee4d2d;
+            color: white;
+            padding: 20px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .search-box {
+            flex: 1;
+            margin: 0 50px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 2px;
+        }
+
+        .user-menu a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .user-profile>a {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #fff;
+        }
+
+        .user-name {
+            margin-right: 15px;
+        }
+
+        .nav-bar {
+            background-color: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .nav-bar ul {
+            list-style: none;
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .nav-bar li {
+            margin-right: 30px;
+        }
+
+        .nav-bar a {
+            color: #333;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:fragment="header">
+        <style>
+            .header {
+                background-color: #ee4d2d;
+                color: white;
+                padding: 20px;
+            }
+
+            .header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .logo {
+                font-size: 28px;
+                font-weight: bold;
+            }
+
+            .logo a {
+                color: white;
+                text-decoration: none;
+            }
+
+            .search-box {
+                flex: 1;
+                margin: 0 50px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 2px;
+            }
+
+            .user-menu a {
+                color: white;
+                text-decoration: none;
+                margin-left: 20px;
+            }
+
+            .user-menu {
+                display: flex;
+                align-items: center;
+            }
+
+            .user-profile {
+                display: flex;
+                align-items: center;
+                color: white;
+            }
+
+            .user-profile>a {
+                display: flex;
+                align-items: center;
+                color: white;
+                text-decoration: none;
+            }
+
+            .avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                margin-right: 8px;
+                background-color: #fff;
+            }
+
+            .user-name {
+                margin-right: 15px;
+            }
+
+            .nav-bar {
+                background-color: white;
+                padding: 15px 20px;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .nav-bar ul {
+                list-style: none;
+                display: flex;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0;
+            }
+
+            .nav-bar li {
+                margin-right: 30px;
+            }
+
+            .nav-bar a {
+                color: #333;
+                text-decoration: none;
+            }
+        </style>
+        <div class="header">
+            <div class="header-top">
+                <div class="logo"><a href="/home">📚 BookStore</a></div>
+                <form class="search-box" action="/home" method="get">
+                    <input type="text" name="search" th:value="${search}"
+                        placeholder="Search for books, authors, publishers...">
+                </form>
+                <div class="user-menu">
+                    <div th:if="${user}" class="user-profile">
+                        <a href="/profile">
+                            <img class="avatar"
+                                th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullname}"
+                                alt="Avatar">
+                            <span class="user-name" th:text="${user.fullname}">User</span>
+                        </a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                    <div th:unless="${user}">
+                        <a href="/register">Register</a>
+                        <a href="/login">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-bar">
+            <ul>
+                <li><a href="/home">Home</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
