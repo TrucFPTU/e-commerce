@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Payments</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        form { margin-bottom: 15px; display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+        label { display:block; color:#444; }
+        select, input, button { padding: 8px; min-width: 200px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f5f5f5; }
+        .btn { cursor: pointer; width: auto; padding: 6px 10px; text-decoration:none; display:inline-block; }
+        .pager { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+        .muted { color: #666; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<h2>Payment Transactions</h2>
+
+<form th:action="@{/admin/payments}" method="get">
+    <div>
+        <label>Provider</label>
+        <select name="provider">
+            <option th:value="${null}" th:selected="${provider == null}">-- All --</option>
+
+            <option th:each="p : ${providers}"
+                    th:value="${p}"
+                    th:text="${p}"
+                    th:selected="${provider != null and provider.name() == p.name()}">
+            </option>
+        </select>
+    </div>
+
+    <div>
+        <label>Status</label>
+        <select name="status">
+            <option th:value="${null}" th:selected="${status == null}">-- All --</option>
+
+            <option th:each="s : ${statuses}"
+                    th:value="${s}"
+                    th:text="${s}"
+                    th:selected="${status != null and status.name() == s.name()}">
+            </option>
+        </select>
+    </div>
+
+    <div>
+        <label>Page size</label>
+        <input type="number" name="size" th:value="${size}" min="1" max="100"/>
+    </div>
+
+    <button class="btn" type="submit">Filter</button>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Order</th>
+        <th>Provider</th>
+        <th>TxnRef</th>
+        <th>Amount</th>
+        <th>Currency</th>
+        <th>Status</th>
+        <th>Response</th>
+        <th>CreatedAt</th>
+        <th>PayDate</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    <tr th:if="${#lists.isEmpty(items)}">
+        <td colspan="10" class="muted">No transactions found.</td>
+    </tr>
+
+    <tr th:each="t : ${items}">
+        <td th:text="${t.paymentId}"></td>
+
+        <!-- FIX: items là DTO AdminPaymentTransactionListItemResponse => dùng orderId -->
+        <td th:text="${t.orderId}"></td>
+
+        <td th:text="${t.provider}"></td>
+        <td th:text="${t.txnRef}"></td>
+        <td th:text="${t.amount}"></td>
+        <td th:text="${t.currency}"></td>
+        <td th:text="${t.status}"></td>
+
+        <td>
+            <div class="muted" th:text="|code: ${t.responseCode}|"></div>
+            <div class="muted" th:text="|txnNo: ${t.transactionNo}|"></div>
+        </td>
+
+        <td th:text="${t.createdAt}"></td>
+        <td th:text="${t.payDate}"></td>
+    </tr>
+
+    </tbody>
+</table>
+
+<div class="pager" th:if="${pageData != null}">
+    <div class="muted"
+         th:text="|Page ${pageData.number + 1} / ${pageData.totalPages} — Total: ${pageData.totalElements}|">
+    </div>
+
+    <a class="btn" th:if="${pageData.hasPrevious()}"
+       th:href="@{/admin/payments(page=${pageData.number-1}, size=${size}, status=${status}, provider=${provider})}">
+        Prev
+    </a>
+
+    <a class="btn" th:if="${pageData.hasNext()}"
+       th:href="@{/admin/payments(page=${pageData.number+1}, size=${size}, status=${status}, provider=${provider})}">
+        Next
+    </a>
+</div>
+
+</body>
+</html>

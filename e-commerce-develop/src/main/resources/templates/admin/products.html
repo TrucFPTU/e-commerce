@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Products</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        form { margin-bottom: 20px; }
+        input, select, textarea, button { padding: 8px; margin: 4px 0; width: 420px; max-width: 100%; }
+        textarea { height: 90px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f5f5f5; }
+        .btn { cursor: pointer; width: auto; }
+        .btn-delete { color: red; }
+        .authors-box { border: 1px solid #ddd; padding: 10px; width: 420px; max-width: 100%; }
+        .authors-box label { display: inline-block; margin-right: 12px; }
+    </style>
+</head>
+<body>
+
+<h2>Product Management</h2>
+
+<h3>Create / Update Product</h3>
+
+<form th:action="@{/admin/products/save}" method="post" id="productForm">
+    <input type="hidden" name="productId" id="productId">
+
+    <div>
+        <label>Name</label><br>
+        <input type="text" name="name" id="name" required>
+    </div>
+
+    <div>
+        <label>Description</label><br>
+        <textarea name="description" id="description"></textarea>
+    </div>
+
+    <div>
+        <label>Image URL</label><br>
+        <input type="text" name="imageUrl" id="imageUrl">
+    </div>
+
+    <div>
+        <label>Price</label><br>
+        <input type="number" step="0.01" name="price" id="price" required>
+    </div>
+
+    <div>
+        <label>Publish Year</label><br>
+        <input type="number" name="publishYear" id="publishYear">
+    </div>
+
+    <div>
+        <label>Stock</label><br>
+        <input type="number" name="stock" id="stock" required>
+    </div>
+
+    <div>
+        <label>Status</label><br>
+        <select name="status" id="status" required>
+            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
+        </select>
+    </div>
+
+    <div>
+        <label>Category</label><br>
+        <select name="categoryId" id="categoryId" required>
+            <option value="">-- Select Category --</option>
+            <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.name}"></option>
+        </select>
+    </div>
+
+    <div>
+        <label>Publisher</label><br>
+        <select name="publisherId" id="publisherId" required>
+            <option value="">-- Select Publisher --</option>
+            <option th:each="p : ${publishers}" th:value="${p.publisherId}" th:text="${p.name}"></option>
+        </select>
+    </div>
+
+    <div>
+        <label>Supplier</label><br>
+        <select name="supplierId" id="supplierId" required>
+            <option value="">-- Select Supplier --</option>
+            <option th:each="s : ${suppliers}" th:value="${s.supplierId}" th:text="${s.name}"></option>
+        </select>
+    </div>
+
+    <div>
+        <label>Authors</label><br>
+        <div class="authors-box" id="authorsBox">
+            <label th:each="a : ${authors}">
+                <input type="checkbox" name="authorIds" th:value="${a.authorId}">
+                <span th:text="${a.name}"></span>
+            </label>
+        </div>
+    </div>
+
+    <button class="btn" type="submit">Save</button>
+    <button class="btn" type="button" onclick="resetForm()">Clear</button>
+</form>
+
+<hr>
+
+<h3>Product List</h3>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Status</th>
+        <th>Category</th>
+        <th>Publisher</th>
+        <th>Supplier</th>
+        <th>Authors</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="p : ${items}">
+        <td th:text="${p.productId}"></td>
+        <td th:text="${p.name}"></td>
+        <td th:text="${p.price}"></td>
+        <td th:text="${p.stock}"></td>
+        <td th:text="${p.status}"></td>
+        <td th:text="${p.category != null ? p.category.name : ''}"></td>
+        <td th:text="${p.publisher != null ? p.publisher.name : ''}"></td>
+        <td th:text="${p.supplier != null ? p.supplier.name : ''}"></td>
+        <td>
+            <span th:each="a, st : ${p.authors}"
+                  th:text="${a.name + (st.last ? '' : ', ')}"></span>
+        </td>
+        <td>
+            <button class="btn"
+                    th:attr="data-id=${p.productId},
+                             data-name=${p.name},
+                             data-description=${p.description},
+                             data-image=${p.imageUrl},
+                             data-price=${p.price},
+                             data-year=${p.publishYear},
+                             data-stock=${p.stock},
+                             data-status=${p.status},
+                             data-category=${p.category.categoryId},
+                             data-publisher=${p.publisher.publisherId},
+                             data-supplier=${p.supplier.supplierId}"
+                    onclick="editProduct(this)">
+                Edit
+            </button>
+
+            <!-- INACTIVE -->
+            <form th:action="@{/admin/products/delete/{id}(id=${p.productId})}" method="post" style="display:inline">
+                <button class="btn btn-delete" onclick="return confirm('Set this product to INACTIVE?')">Delete</button>
+            </form>
+
+            <!-- hidden authorIds for JS -->
+            <input type="hidden"
+                   th:id="'aids_'+${p.productId}"
+                   th:value="${productAuthorIds[p.productId]}" />
+
+
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    function resetForm(){
+        document.getElementById("productId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("imageUrl").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("publishYear").value = "";
+        document.getElementById("stock").value = "";
+        document.getElementById("status").value = "ACTIVE";
+        document.getElementById("categoryId").value = "";
+        document.getElementById("publisherId").value = "";
+        document.getElementById("supplierId").value = "";
+        document.querySelectorAll('input[name="authorIds"]').forEach(cb => cb.checked = false);
+    }
+
+    function editProduct(btn){
+        document.getElementById("productId").value = btn.dataset.id;
+        document.getElementById("name").value = btn.dataset.name || "";
+        document.getElementById("description").value = btn.dataset.description || "";
+        document.getElementById("imageUrl").value = btn.dataset.image || "";
+        document.getElementById("price").value = btn.dataset.price || "";
+        document.getElementById("publishYear").value = btn.dataset.year || "";
+        document.getElementById("stock").value = btn.dataset.stock || "";
+        document.getElementById("status").value = btn.dataset.status || "ACTIVE";
+        document.getElementById("categoryId").value = btn.dataset.category || "";
+        document.getElementById("publisherId").value = btn.dataset.publisher || "";
+        document.getElementById("supplierId").value = btn.dataset.supplier || "";
+
+        // check authors
+        document.querySelectorAll('input[name="authorIds"]').forEach(cb => cb.checked = false);
+        const hid = document.getElementById("aids_" + btn.dataset.id);
+        const ids = (hid && hid.value) ? hid.value.split(",").map(x => x.trim()).filter(x => x) : [];
+        ids.forEach(id => {
+            const cb = document.querySelector('input[name="authorIds"][value="' + id + '"]');
+            if (cb) cb.checked = true;
+        });
+
+        window.scrollTo({top: 0, behavior: "smooth"});
+    }
+</script>
+
+</body>
+</html>

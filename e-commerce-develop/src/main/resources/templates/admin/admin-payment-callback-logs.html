@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Payment Callback Logs</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        form { margin-bottom: 15px; display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+        label { display:block; color:#444; }
+        input, button { padding: 8px; min-width: 220px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f5f5f5; }
+        .btn { cursor: pointer; width: auto; padding: 6px 10px; text-decoration:none; display:inline-block; }
+        .pager { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+        .muted { color: #666; font-size: 13px; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        .nowrap { white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+<h2>Payment Callback Logs</h2>
+
+<form th:action="@{/admin/payment-callback-logs}" method="get">
+    <div>
+        <label>Provider</label>
+        <input type="text" name="provider" th:value="${provider}" placeholder="VNPAY / MOMO / PAYPAL"/>
+    </div>
+
+    <div>
+        <label>TxnRef</label>
+        <input type="text" name="txnRef" th:value="${txnRef}" placeholder="TXN-..."/>
+    </div>
+
+    <div>
+        <label>Page size</label>
+        <input type="number" name="size"
+               th:value="${pageData != null ? pageData.size : 10}"
+               min="1" max="200"/>
+    </div>
+
+    <button class="btn" type="submit">Filter</button>
+    <a class="btn" th:href="@{/admin/payment-callback-logs}">Reset</a>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Provider</th>
+        <th>TxnRef</th>
+        <th class="nowrap">ReceivedAt</th>
+        <th>ValidSig</th>
+        <th>Client IP</th>
+        <th>Payload (preview)</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:if="${items == null or #lists.isEmpty(items)}">
+        <td colspan="8" class="muted">No callback logs found.</td>
+    </tr>
+
+    <tr th:each="l : ${items}">
+        <td th:text="${l.logId}"></td>
+
+        <!-- provider là ENUM => dùng name() + fallback -->
+        <td th:text="${l.provider != null ? l.provider.name() : 'UNKNOWN'}"></td>
+
+        <td class="mono" th:text="${l.txnRef}"></td>
+
+        <td class="nowrap"
+            th:text="${l.receivedAt != null ? #temporals.format(l.receivedAt, 'yyyy-MM-dd HH:mm:ss') : ''}">
+        </td>
+
+        <td th:text="${l.validSignature}"></td>
+        <td class="mono" th:text="${l.clientIp != null ? l.clientIp : ''}"></td>
+
+        <!-- cắt chuỗi an toàn bằng #strings -->
+        <td class="muted mono"
+            th:text="${l.rawPayload != null
+                      ? (#strings.length(l.rawPayload) > 120
+                          ? #strings.substring(l.rawPayload, 0, 120) + '...'
+                          : l.rawPayload)
+                      : ''}">
+        </td>
+
+        <td>
+            <a class="btn" th:href="@{/admin/payment-callback-logs/{id}(id=${l.logId})}">View</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="pager" th:if="${pageData != null}">
+    <div class="muted"
+         th:text="'Page ' + (pageData.totalPages == 0 ? 0 : (pageData.number + 1)) + ' / ' + pageData.totalPages
+                  + ' - Total: ' + pageData.totalElements">
+    </div>
+
+    <a class="btn"
+       th:if="${pageData.hasPrevious()}"
+       th:href="@{/admin/payment-callback-logs(page=${pageData.number - 1},
+                                              size=${pageData.size},
+                                              provider=${provider},
+                                              txnRef=${txnRef})}">
+        Prev
+    </a>
+
+    <a class="btn"
+       th:if="${pageData.hasNext()}"
+       th:href="@{/admin/payment-callback-logs(page=${pageData.number + 1},
+                                              size=${pageData.size},
+                                              provider=${provider},
+                                              txnRef=${txnRef})}">
+        Next
+    </a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Callback Log Detail</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        .btn { cursor: pointer; width: auto; padding: 6px 10px; text-decoration:none; display:inline-block; }
+        .muted { color: #666; font-size: 13px; }
+        .card { border:1px solid #ddd; padding: 14px; border-radius: 8px; margin-top: 10px; }
+        .row { display:flex; gap: 16px; flex-wrap: wrap; }
+        .field { min-width: 240px; }
+        .label { color:#444; font-size: 13px; margin-bottom: 4px; }
+        .value { font-weight: 600; }
+        pre { white-space: pre-wrap; word-break: break-word; background:#f7f7f7; padding: 12px; border-radius: 8px; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    </style>
+</head>
+<body>
+
+<a class="btn" th:href="@{/admin/payment-callback-logs}">← Back</a>
+
+<h2>Callback Log Detail</h2>
+
+<div class="card">
+    <div class="row">
+        <div class="field">
+            <div class="label">ID</div>
+            <div class="value" th:text="${item.logId}"></div>
+        </div>
+
+        <div class="field">
+            <div class="label">Provider</div>
+            <!-- enum => name() + fallback -->
+            <div class="value" th:text="${item.provider != null ? item.provider.name() : 'UNKNOWN'}"></div>
+        </div>
+
+        <div class="field">
+            <div class="label">TxnRef</div>
+            <div class="value mono" th:text="${item.txnRef}"></div>
+        </div>
+
+        <div class="field">
+            <div class="label">ReceivedAt</div>
+            <div class="value"
+                 th:text="${item.receivedAt != null ? #temporals.format(item.receivedAt, 'yyyy-MM-dd HH:mm:ss') : ''}">
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="label">Valid Signature</div>
+            <div class="value" th:text="${item.validSignature}"></div>
+        </div>
+
+        <div class="field">
+            <div class="label">HTTP Status</div>
+            <!-- hiện tại bạn set null => cho hiển thị dấu gạch -->
+            <div class="value" th:text="${item.httpStatus != null ? item.httpStatus : '—'}"></div>
+        </div>
+
+        <div class="field">
+            <div class="label">Client IP</div>
+            <div class="value mono" th:text="${item.clientIp != null ? item.clientIp : ''}"></div>
+        </div>
+    </div>
+</div>
+
+<h3>Raw Payload</h3>
+<div class="card">
+    <pre class="mono" th:text="${item.rawPayload != null ? item.rawPayload : ''}"></pre>
+    <div class="muted">Tip: dùng payload này để debug / đối soát callback.</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Authors</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        form { margin-bottom: 20px; }
+        input, button { padding: 8px; margin: 4px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        .btn { cursor: pointer; }
+        .btn-delete { color: red; }
+    </style>
+</head>
+<body>
+
+<h2>Author Management</h2>
+
+<h3>Create / Update Author</h3>
+
+<form th:action="@{/admin/authors/save}" method="post">
+    <input type="hidden" name="authorId" id="authorId">
+
+    <div>
+        <label>Name</label><br>
+        <input type="text" name="name" id="name" required>
+    </div>
+
+    <button type="submit">Save</button>
+    <button type="button" onclick="resetForm()">Clear</button>
+</form>
+
+<hr>
+
+<h3>Author List</h3>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="a : ${items}">
+        <td th:text="${a.authorId}"></td>
+        <td th:text="${a.name}"></td>
+        <td>
+            <button class="btn"
+                    th:attr="data-id=${a.authorId},data-name=${a.name}"
+                    onclick="editAuthor(this)">
+                Edit
+            </button>
+
+            <form th:action="@{/admin/authors/delete/{id}(id=${a.authorId})}" method="post"
+                  style="display:inline">
+                <button class="btn btn-delete"
+                        onclick="return confirm('Delete this author?')">
+                    Delete
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    function editAuthor(btn){
+        document.getElementById("authorId").value = btn.dataset.id;
+        document.getElementById("name").value = btn.dataset.name;
+        window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    function resetForm(){
+        document.getElementById("authorId").value = "";
+        document.getElementById("name").value = "";
+    }
+</script>
+
+</body>
+</html>

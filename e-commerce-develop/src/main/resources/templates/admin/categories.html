@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Categories</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        h2 { margin-bottom: 10px; }
+        form { margin-bottom: 20px; }
+        input, select, button { padding: 8px; margin: 4px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        .btn { cursor: pointer; }
+        .btn-delete { color: red; }
+    </style>
+</head>
+<body>
+
+<h2>Category Management</h2>
+
+<h3>Create / Update Category</h3>
+
+<form th:action="@{/admin/categories/save}" method="post">
+    <input type="hidden" name="categoryId" id="categoryId">
+
+    <div>
+        <label>Name</label>
+        <input type="text" name="name" id="name" required>
+    </div>
+
+    <div>
+        <label>Parent Category</label><br>
+        <select name="parentId" id="parentId">
+            <option value="">-- ROOT--</option>
+            <option th:each="c : ${items}"
+                    th:value="${c.categoryId}"
+                    th:text="${c.name}">
+            </option>
+        </select>
+    </div>
+
+    <button type="submit">Save</button>
+    <button type="button" onclick="resetForm()">Clear</button>
+</form>
+
+<hr>
+
+<h3>Category List</h3>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Parent</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${items}">
+        <td th:text="${c.categoryId}"></td>
+        <td th:text="${c.name}"></td>
+        <td th:text="${c.parent != null ? c.parent.name : 'ROOT'}"></td>
+        <td>
+            <button class="btn"
+                    th:attr="data-id=${c.categoryId},
+                             data-name=${c.name},
+                             data-parent=${c.parent != null ? c.parent.categoryId : ''}"
+                    onclick="editCategory(this)">
+            Edit
+            </button>
+
+            <form th:action="@{/admin/categories/delete/{id}(id=${c.categoryId})}" method="post"
+            style="display: inline">
+                <button class="btn btn-delete"
+                        onclick="return confirm('Delete this category?')">
+                Delete
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<script>
+    function editCategory(btn){
+        document.getElementById("categoryId").value = btn.dataset.id;
+        document.getElementById("name").value = btn.dataset.name;
+        document.getElementById("parentId").value = btn.dataset.parent || "";
+        window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    function resetForm(){
+        document.getElementById("categoryId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("parentId").value = "";
+    }
+</script>
+</body>
+</html>
