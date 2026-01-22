@@ -23,7 +23,6 @@ public class DashboardController {
         return "dashboard/admin";
     }
 
-
     @GetMapping("/homepage")
     public String customer(Model model, HttpSession session) {
         User user = getUserOrRedirect(session);

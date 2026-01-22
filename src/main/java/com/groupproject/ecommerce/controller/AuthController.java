@@ -18,12 +18,12 @@ public class AuthController {
     private final AuthService authService;
     private final String SESSION_USER = "LOGIN_USER";
 
-
     @GetMapping("/login")
     public String showLogin(Model model) {
         model.addAttribute("loginRequest", new LoginRequest());
         return "auth/login";
     }
+
     @PostMapping("/login")
     public String doLogin(@Valid @ModelAttribute("loginRequest") LoginRequest req,
                           BindingResult bindingResult,
@@ -34,6 +34,7 @@ public class AuthController {
           session.setAttribute(SESSION_USER, user);
           switch (user.getRole()) {
               case ADMIN -> {return "redirect:/admin";}
+              case STAFF -> { return "redirect:/staff/chat"; }
               default -> {return "redirect:/homepage";}
           }
 

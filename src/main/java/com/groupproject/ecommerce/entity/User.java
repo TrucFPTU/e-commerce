@@ -1,5 +1,4 @@
 package com.groupproject.ecommerce.entity;
-
 import com.groupproject.ecommerce.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,7 +24,7 @@ public class User {
     @Column(nullable = false, length = 255)
     private String passWord;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(30)")
     private String fullName;
 
     @Enumerated(EnumType.STRING)

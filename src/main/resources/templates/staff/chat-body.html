@@ -1,0 +1,67 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="head">
+  <style>
+    .chat-wrap { display:flex; gap:16px; height: calc(100vh - 56px - 32px); }
+    .conv { width: 320px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    .conv-header { padding:12px; border-bottom:1px solid #eee; font-weight:600; }
+    .conv-list { flex:1; overflow:auto; padding:10px; }
+    .conv-item { padding:10px; border:1px solid #eee; border-radius:12px; margin-bottom:10px; cursor:pointer; }
+    .conv-item:hover { background:#fafafa; }
+    .conv-title { font-weight:600; }
+    .conv-sub { font-size:12px; color:#666; margin-top:4px; }
+
+    .chat { flex:1; background:#fff; border:1px solid #e5e7eb; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; }
+    .chat-header { padding:12px; border-bottom:1px solid #eee; font-weight:600; }
+    .chat-area { flex:1; overflow:auto; padding:12px; background:#fafafa; }
+    .msg-row { display:flex; margin:6px 0; }
+    .msg-me { justify-content:flex-end; }
+    .msg-other { justify-content:flex-start; }
+    .bubble { max-width:70%; padding:8px 10px; border-radius:12px; background:#e9e9e9; white-space:pre-wrap; word-break:break-word; }
+    .bubble.me { background:#cfe8ff; }
+    .composer { padding:10px; border-top:1px solid #eee; display:flex; gap:8px; }
+    .composer input { flex:1; padding:10px; border:1px solid #ddd; border-radius:10px; }
+    .composer button { padding:10px 12px; border:none; border-radius:10px; cursor:pointer; }
+    .hint { padding:14px; color:#666; }
+  </style>
+</th:block>
+
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+  <div class="chat-wrap">
+    <div class="conv">
+      <div class="conv-header">Khách hàng</div>
+      <div class="conv-list" id="staffConvList">
+        <div class="conv-item"
+             th:each="c : ${conversations}"
+             th:attr="data-conv-id=${c.id},data-customer-name=${c.customer.fullName}">
+          <div class="conv-title" th:text="${c.customer.fullName}">Customer</div>
+          <div class="conv-sub"
+               th:text="${c.lastMessageAt} != null ? 'Last: ' + ${c.lastMessageAt} : 'Last: -'">Last</div>
+
+        </div>
+
+        <div th:if="${#lists.isEmpty(conversations)}" class="hint">
+          Chưa có cuộc chat nào.
+        </div>
+      </div>
+    </div>
+
+    <div class="chat">
+      <div class="chat-header">
+        Đang chat với: <span id="staffChatWith">Chọn 1 khách ở bên trái</span>
+      </div>
+      <div class="chat-area" id="staffChatMessages"></div>
+
+      <div class="composer">
+        <input id="staffChatText" type="text" placeholder="Nhập tin nhắn..." autocomplete="off" disabled>
+        <button id="staffChatSend" disabled>Gửi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SockJS + STOMP + staff JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script th:inline="javascript">
+    window.__STAFF_CURRENT_USER_ID = /*[[${user.userId}]]*/ 0;
+  </script>
+  <script th:src="@{/js/staff-chat.js}"></script>
+</th:block>
