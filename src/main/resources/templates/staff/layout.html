@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(pageTitle, activeMenu, pageHead, pageBody, user)">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${pageTitle} ?: 'Staff'">Staff</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#f7f7f7; }
+    .app { display:flex; height:100vh; }
+
+    .sidebar { width: 240px; background:#111827; color:#fff; padding:16px; box-sizing:border-box; }
+    .brand { font-weight:700; font-size:18px; margin-bottom:16px; }
+    .userbox { font-size:12px; color:#cbd5e1; margin-bottom:16px; }
+    .menu { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .menu a {
+      color:#e5e7eb; text-decoration:none; padding:10px 12px; border-radius:10px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .menu a.active { background:#1f2937; }
+    .menu a:hover { background:#1f2937; }
+
+    .content { flex:1; display:flex; flex-direction:column; }
+    .topbar {
+      height:56px; background:#fff; border-bottom:1px solid #e5e7eb;
+      display:flex; align-items:center; justify-content:space-between; padding:0 16px; box-sizing:border-box;
+    }
+    .topbar .title { font-weight:600; }
+    .topbar a { text-decoration:none; color:#111827; font-size:13px; }
+
+    .page { flex:1; padding:16px; box-sizing:border-box; overflow:auto; }
+  </style>
+
+  <!-- page-specific head -->
+  <th:block th:replace="${pageHead} ?: ~{}"></th:block>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">STAFF PANEL</div>
+    <div class="userbox">
+      <div th:text="${user.fullName}">Staff Name</div>
+      <div th:text="${user.email}">email</div>
+    </div>
+
+    <nav class="menu">
+      <a th:href="@{/staff/chat}"
+         th:classappend="${activeMenu}=='chat' ? ' active' : ''">💬 Chat tư vấn</a>
+      <a th:href="@{/staff/orders}"
+         th:classappend="${activeMenu}=='orders' ? ' active' : ''">📦 Quản lý đơn hàng</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <div class="title" th:text="${pageTitle} ?: 'Staff'">Staff</div>
+      <a th:href="@{/logout}">Đăng xuất</a>
+    </div>
+
+    <section class="page">
+      <th:block th:replace="${pageBody}"></th:block>
+    </section>
+  </main>
+</div>
+</body>
+</html>

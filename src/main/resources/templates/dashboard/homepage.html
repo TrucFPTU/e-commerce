@@ -1,9 +1,22 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Customer</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Customer</title>
+</head>
 <body>
 <h2 th:text="'Xin chào CUSTOMER, ' + ${user.fullName} + '!'"></h2>
 <p th:text="'Email: ' + ${user.email}"></p>
 <a th:href="@{/logout}">Đăng xuất</a>
+
+<div th:replace="fragments/chat-widget :: chatWidget"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:src="@{/js/chat-widget.js}"></script>
+<script>
+    if (window.ChatWidgetInit) ChatWidgetInit();
+</script>
+
 </body>
 </html>

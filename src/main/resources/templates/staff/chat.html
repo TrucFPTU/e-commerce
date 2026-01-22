@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="staff/layout :: layout(
+        'Chat tư vấn',
+        'chat',
+        ~{staff/chat-body :: head},
+        ~{staff/chat-body :: body},
+        ${user}
+      )">
+</html>
