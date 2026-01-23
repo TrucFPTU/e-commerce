@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .profile-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .profile-field {
+            margin-bottom: 20px;
+        }
+
+        .profile-field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .profile-field input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .profile-field input:disabled {
+            background-color: #f5f5f5;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background-color: #ee4d2d;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #ee4d2d;
+            text-decoration: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <img class="avatar-large" th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullname}"
+                alt="Avatar">
+            <div class="profile-name" th:text="${user.fullname}">User Name</div>
+        </div>
+
+        <form id="profileForm" action="/profile/update" method="post">
+            <div class="profile-field">
+                <label>Full Name <button type="button" class="edit-btn"
+                        onclick="enableEdit('fullname')">✏️</button></label>
+                <input type="text" id="fullname" name="fullname" th:value="${user.fullname}" disabled>
+            </div>
+
+            <div class="profile-field">
+                <label>Email <button type="button" class="edit-btn" onclick="enableEdit('email')">✏️</button></label>
+                <input type="email" id="email" name="email" th:value="${user.email}" disabled>
+            </div>
+
+            <div class="profile-field">
+                <label>Password <button type="button" class="edit-btn"
+                        onclick="enableEdit('password')">✏️</button></label>
+                <input type="password" id="password" name="password" th:value="${user.password}" disabled>
+            </div>
+
+            <div id="saveActions" class="actions hidden">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </form>
+
+        <a href="/home" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        function enableEdit(fieldId) {
+            document.getElementById(fieldId).disabled = false;
+            document.getElementById(fieldId).focus();
+            document.getElementById('saveActions').classList.remove('hidden');
+        }
+
+        function cancelEdit() {
+            document.querySelectorAll('#profileForm input').forEach(function (input) {
+                input.disabled = true;
+            });
+            document.getElementById('saveActions').classList.add('hidden');
+            location.reload();
+        }
+    </script>
+</body>
+
+</html>
