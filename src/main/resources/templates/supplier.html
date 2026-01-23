@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${supplier.name + ' - BookStore'}">Supplier - BookStore</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #ee4d2d;
+            text-decoration: none;
+        }
+
+        .breadcrumb span {
+            color: #666;
+        }
+
+        .entity-header {
+            background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+            border-radius: 2px;
+            padding: 40px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .entity-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #4caf50;
+            flex-shrink: 0;
+        }
+
+        .entity-info h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .entity-info p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .section-title {
+            background-color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+        }
+
+        .section-title h2 {
+            color: #ee4d2d;
+            font-size: 20px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 2px;
+            padding: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+        }
+
+        .product-name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            height: 40px;
+            overflow: hidden;
+        }
+
+        .product-price {
+            color: #ee4d2d;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .product-info {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+
+        .product-info a {
+            color: #ee4d2d;
+            text-decoration: none;
+        }
+
+        .product-info a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background-color: white;
+            padding: 30px 20px;
+            margin-top: 40px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+        }
+
+        .no-books {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            border-radius: 2px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 2px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(.disabled):not(.active) {
+            background-color: #f5f5f5;
+            border-color: #ee4d2d;
+            color: #ee4d2d;
+        }
+
+        .page-btn.active {
+            background-color: #ee4d2d;
+            border-color: #ee4d2d;
+            color: white;
+        }
+
+        .page-btn.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/home">Home</a>
+            <span> / Suppliers / </span>
+            <span th:text="${supplier.name}">Supplier Name</span>
+        </div>
+
+        <div class="entity-header">
+            <div class="entity-avatar">📦</div>
+            <div class="entity-info">
+                <h1 th:text="${supplier.name}">Supplier Name</h1>
+                <p>Supplier</p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" th:text="${#lists.size(books)}">0</div>
+                        <div class="stat-label">Books</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2 th:text="${'Supplied by ' + supplier.name}">Books from Supplier</h2>
+        </div>
+
+        <div th:if="${!books.isEmpty()}" class="product-grid">
+            <div th:each="book : ${books}" th:onclick="'window.location.href=\'/book/' + ${book.id} + '\''"
+                class="product-card">
+                <img th:src="${book.imageURL}" alt="Book Cover" class="product-image" loading="lazy"
+                    onerror="this.onerror=null; this.src='https://placehold.co/200x300?text=No+Cover&font=roboto'">
+                <div class="product-name" th:text="${book.name}">Book Name</div>
+                <div class="product-price" th:text="${'₫' + #numbers.formatInteger(book.price, 0, 'COMMA')}">Price</div>
+                <div class="product-info">
+                    By <a th:href="@{/author/{id}(id=${book.author.id})}" th:text="${book.author.name}"
+                        onclick="event.stopPropagation();">Author</a>
+                </div>
+                <div class="product-info">
+                    <a th:href="@{/publisher/{id}(id=${book.publisher.id})}" th:text="${book.publisher.name}"
+                        onclick="event.stopPropagation();">Publisher</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+
+        <div class="no-results" id="no-results"
+            style="display: none; text-align: center; padding: 40px; background: white; border-radius: 2px;">
+            <p style="font-size: 18px; color: #666;">No books found matching your search.</p>
+        </div>
+
+        <div th:if="${books.isEmpty()}" class="no-books">
+            <p>No books available from this supplier.</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var searchInput = document.querySelector('input[name="search"]');
+            var productGrid = document.querySelector('.product-grid');
+            var pagination = document.getElementById('pagination');
+            var noResults = document.getElementById('no-results');
+            if (!productGrid) return;
+            var allCards = Array.from(productGrid.querySelectorAll('.product-card'));
+
+            var ITEMS_PER_PAGE = 10;
+            var currentPage = 0;
+            var filteredCards = allCards;
+
+            function getFilteredCards(searchTerm) {
+                if (!searchTerm) return allCards;
+                return allCards.filter(function (card) {
+                    var name = (card.querySelector('.product-name').textContent || '').toLowerCase();
+                    return name.includes(searchTerm);
+                });
+            }
+
+            function renderPage() {
+                var start = currentPage * ITEMS_PER_PAGE;
+                var end = start + ITEMS_PER_PAGE;
+
+                allCards.forEach(function (card) { card.style.display = 'none'; });
+
+                if (filteredCards.length === 0) {
+                    if (noResults) noResults.style.display = 'block';
+                    pagination.style.display = 'none';
+                } else {
+                    if (noResults) noResults.style.display = 'none';
+                    filteredCards.slice(start, end).forEach(function (card) {
+                        card.style.display = '';
+                    });
+                    renderPagination();
+                }
+            }
+
+            function renderPagination() {
+                var totalPages = Math.ceil(filteredCards.length / ITEMS_PER_PAGE);
+
+                if (totalPages <= 1) {
+                    pagination.style.display = 'none';
+                    return;
+                }
+
+                pagination.style.display = 'flex';
+                var html = '';
+
+                if (currentPage > 0) {
+                    html += '<a href="#" class="page-btn" data-page="' + (currentPage - 1) + '">← Previous</a>';
+                } else {
+                    html += '<span class="page-btn disabled">← Previous</span>';
+                }
+
+                for (var i = 0; i < totalPages; i++) {
+                    var activeClass = i === currentPage ? ' active' : '';
+                    html += '<a href="#" class="page-btn' + activeClass + '" data-page="' + i + '">' + (i + 1) + '</a>';
+                }
+
+                if (currentPage < totalPages - 1) {
+                    html += '<a href="#" class="page-btn" data-page="' + (currentPage + 1) + '">Next →</a>';
+                } else {
+                    html += '<span class="page-btn disabled">Next →</span>';
+                }
+
+                pagination.innerHTML = html;
+            }
+
+            pagination.addEventListener('click', function (e) {
+                if (e.target.tagName === 'A' && e.target.dataset.page !== undefined) {
+                    e.preventDefault();
+                    currentPage = parseInt(e.target.dataset.page);
+                    renderPage();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            if (searchInput) {
+                var debounceTimer;
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () {
+                        var searchTerm = searchInput.value.toLowerCase().trim();
+                        filteredCards = getFilteredCards(searchTerm);
+                        currentPage = 0;
+                        renderPage();
+                    }, 150);
+                });
+
+                searchInput.closest('form').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                });
+            }
+
+            renderPage();
+        })();
+    </script>
+
+    <div class="footer">
+        <p>&copy; 2026 BookStore. All rights reserved.</p>
+        <p>Trusted online bookstore with thousands of titles</p>
+    </div>
+</body>
+
+</html>
