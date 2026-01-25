@@ -1,5 +1,6 @@
 package com.groupproject.ecommerce.controller;
 
+import com.groupproject.ecommerce.service.inter.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -9,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import jakarta.servlet.http.HttpSession;
-import com.groupproject.ecommerce.service.BookService;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public class ChatController {
     private String openaiUrl;
 
     @Autowired
-    private BookService bookService;
+    private ProductService productService;
 
     private static final String CHAT_HISTORY_KEY = "chatHistory";
 
@@ -37,7 +38,7 @@ public class ChatController {
             If they want something specific, guide them to the right book.
             Include the book price when recommending.
             
-            """ + bookService.getBooksForPrompt();
+            """ + productService.getProductsForPrompt(30);
     }
 
     @SuppressWarnings("unchecked")

@@ -17,6 +17,31 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
+    @Override
+    public String getProductsForPrompt(int limit) {
+        // lấy hàng ACTIVE (dùng luôn getHomeBooks() cho đơn giản, hạn chế prompt quá dài)
+        List<BookCardRes> list = getHomeBooks();
+        if (list == null || list.isEmpty()) return "\n\n(Hiện chưa có sản phẩm để gợi ý.)";
+
+        int n = Math.min(limit, list.size());
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\nAvailable books (for recommendation):\n");
+        for (int i = 0; i < n; i++) {
+            BookCardRes b = list.get(i);
+            sb.append("- ")
+                    .append(b.getName())
+                    .append(" | Author: ").append(b.getAuthorName())
+                    .append(" | Publisher: ").append(b.getPublisherName())
+                    .append(" | Year: ").append(b.getPublishYear())
+                    .append(" | Price: ").append(b.getPrice())
+                    .append(" | Stock: ").append(b.getStock())
+                    .append("\n");
+        }
+        sb.append("Rules: Recommend only from this list if possible.\n");
+        return sb.toString();
+    }
+
+
 
     @Override
     public List<BookCardRes> searchHomeBooks(String keyword) {
