@@ -26,29 +26,31 @@ public class CartController {
 
     @PostMapping("/add")
     public String addToCart(@Valid @ModelAttribute AddToCartRequest request,
-                           BindingResult bindingResult,
-                           HttpSession session,
-                           RedirectAttributes redirectAttributes) {
+                            BindingResult bindingResult,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes,
+                            @RequestHeader(value = "Referer", required = false) String referer) {
 
         User user = (User) session.getAttribute(SESSION_USER);
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
+
+        String redirectUrl = (referer != null && !referer.isBlank()) ? referer : "/homepage";
 
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu không hợp lệ");
-            return "redirect:/homepage";
+            return "redirect:" + redirectUrl;
         }
 
         try {
             cartService.addToCart(user, request.getProductId(), request.getQuantity());
-            redirectAttributes.addFlashAttribute("successMessage", "Thêm vào giỏ hàng thành công");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thêm vào giỏ hàng ✅");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        return "redirect:/homepage";
+        return "redirect:" + redirectUrl;
     }
+
 
     @GetMapping
     public String viewCart(HttpSession session, Model model) {
@@ -122,4 +124,8 @@ public class CartController {
 
         return "redirect:/cart";
     }
+
+
+
+
 }

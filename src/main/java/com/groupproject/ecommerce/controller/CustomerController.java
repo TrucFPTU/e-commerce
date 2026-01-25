@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 @Controller
@@ -33,14 +34,24 @@ public class CustomerController {
 //    }
 
     @GetMapping("/homepage")
-    public String customer(Model model, HttpSession session) {
+    public String customer(@RequestParam(value = "search", required = false) String search,
+                           Model model,
+                           HttpSession session) {
         User user = getUserOrRedirect(session);
         if (user == null) return "redirect:/login";
 
         model.addAttribute("user", user);
-        model.addAttribute("books", productService.getHomeBooks());
+
+        if (search == null || search.trim().isEmpty()) {
+            model.addAttribute("books", productService.getHomeBooks());
+        } else {
+            String keyword = search.trim();
+            model.addAttribute("search", keyword);
+            model.addAttribute("books", productService.searchHomeBooks(keyword));
+        }
         return "customer/home";
     }
+
 
     @GetMapping("/profile")
     public String profile(Model model, HttpSession session) {

@@ -10,6 +10,6 @@ public interface ProductService {
     List<BookCardRes> getBooksByAuthor(Long authorId);
     List<BookCardRes> getBooksByPublisher(Long publisherId);
     List<BookCardRes> getBooksBySupplier(Long supplierId);
-
+    List<BookCardRes> searchHomeBooks(String keyword);
 
 }

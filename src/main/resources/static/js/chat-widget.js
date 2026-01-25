@@ -614,6 +614,51 @@
         document.body.appendChild(overlay);
     }
 
+    (function () {
+        function isAIOpen() {
+            var ai = document.getElementById('chat-popup');
+            return ai && ai.classList.contains('active');
+        }
+
+        function closeAI() {
+            var ai = document.getElementById('chat-popup');
+            if (ai && ai.classList.contains('active')) ai.classList.remove('active');
+        }
+
+        function isStaffOpen() {
+            var box = document.getElementById('chatBox');
+            return box && !box.classList.contains('hidden');
+        }
+
+        function closeStaff() {
+            var box = document.getElementById('chatBox');
+            if (box) box.classList.add('hidden');
+        }
+
+        // 1) Khi bấm mở Staff chat -> đóng AI chat
+        var staffToggle = document.getElementById('chatToggle');
+        if (staffToggle) {
+            staffToggle.addEventListener('click', function () {
+                // nếu đang mở staff (tức click để đóng) thì thôi không cần đóng AI
+                var willOpenStaff = !isStaffOpen();
+                if (willOpenStaff) closeAI();
+            }, true);
+        }
+
+        // 2) Khi bấm mở AI chat -> đóng Staff chat
+        var aiFab = document.getElementById('chat-fab');
+        if (aiFab) {
+            aiFab.addEventListener('click', function () {
+                // AI toggle nằm trong header, click mở/đóng.
+                // nếu click này làm AI mở lên thì đóng staff
+                // (đợi 0 tick để header toggle xong class 'active')
+                setTimeout(function () {
+                    if (isAIOpen()) closeStaff();
+                }, 0);
+            }, true);
+        }
+    })();
+
 
 
 
