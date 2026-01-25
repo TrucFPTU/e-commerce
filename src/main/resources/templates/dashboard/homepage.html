@@ -61,7 +61,7 @@
         <h4 th:text="${product.name}"></h4>
         <p class="price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></p>
 
-        <p class="stock" th:if="${product.status.name() == 'AVAILABLE'}">
+        <p class="stock" th:if="${product.status.name() == 'ACTIVE'}">
             Còn: <span th:text="${product.stock}"></span> cuốn
         </p><p class="out-of-stock" th:if="${product.status.name() == 'OUT_OF_STOCK'}">
         Hết hàng
@@ -73,7 +73,7 @@
                    th:max="${product.stock}"
                    th:disabled="${product.status.name() == 'OUT_OF_STOCK'}"/>
             <button type="submit" th:disabled="${product.status.name() == 'OUT_OF_STOCK'}">
-                <span th:if="${product.status.name() == 'AVAILABLE'}">Thêm vào giỏ</span>
+                <span th:if="${product.status.name() == 'ACTIVE'}">Thêm vào giỏ</span>
                 <span th:if="${product.status.name() == 'OUT_OF_STOCK'}">Hết hàng</span>
             </button>
         </form>

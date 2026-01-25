@@ -27,7 +27,7 @@ public class CartServiceImpl implements CartService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
 
-        if (product.getStatus() != ProductStatus.AVAILABLE) {
+        if (product.getStatus() != ProductStatus.ACTIVE) {
             throw new RuntimeException("Sản phẩm không còn bán");
         }
 
