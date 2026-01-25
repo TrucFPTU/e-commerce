@@ -1,4 +1,4 @@
-// service/impl/ProductServiceImpl.java
+
 package com.groupproject.ecommerce.service.impl;
 
 import com.groupproject.ecommerce.dto.response.BookCardRes;
@@ -16,6 +16,15 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+
+
+    @Override
+    public List<BookCardRes> searchHomeBooks(String keyword) {
+        return productRepository.searchActive(keyword)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
 
     @Override
     public List<BookCardRes> getBooksBySupplier(Long supplierId) {

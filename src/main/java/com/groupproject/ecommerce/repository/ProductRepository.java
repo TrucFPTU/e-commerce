@@ -63,4 +63,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 """)
     List<Product> findActiveBySupplierId(@Param("supplierId") Long supplierId);
 
+
+    @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
+    @Query("""
+    select distinct p
+    from Product p
+    left join p.authors a
+    where p.status = com.groupproject.ecommerce.enums.ProductStatus.ACTIVE
+      and (
+           lower(p.name) like lower(concat('%', :kw, '%'))
+        or lower(p.description) like lower(concat('%', :kw, '%'))
+        or lower(p.publisher.name) like lower(concat('%', :kw, '%'))
+        or lower(p.supplier.name) like lower(concat('%', :kw, '%'))
+        or lower(a.name) like lower(concat('%', :kw, '%'))
+      )
+    order by p.productId desc
+""")
+    List<Product> searchActive(@Param("kw") String keyword);
+
+
 }

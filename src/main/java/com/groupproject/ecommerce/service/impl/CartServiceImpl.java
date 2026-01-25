@@ -22,6 +22,12 @@ public class CartServiceImpl implements CartService {
     private final ProductRepository productRepository;
 
     @Override
+    public int getCartCount(User user) {
+        Integer sum = cartItemRepository.sumQuantityByUser(user);
+        return sum == null ? 0 : sum;
+    }
+
+    @Override
     @Transactional
     public CartItem addToCart(User user, Long productId, Integer quantity) {
         Product product = productRepository.findById(productId)
