@@ -225,7 +225,7 @@
 
     <div class="container">
         <div class="breadcrumb">
-            <a href="/home">Home</a>
+            <a th:href="@{/homepage}">Home</a>
             <span> / Authors / </span>
             <span th:text="${author.name}">Author Name</span>
         </div>
@@ -251,12 +251,12 @@
         <div th:if="${!books.isEmpty()}" class="product-grid">
             <div th:each="book : ${books}" th:onclick="'window.location.href=\'/book/' + ${book.id} + '\''"
                 class="product-card">
-                <img th:src="${book.imageURL}" alt="Book Cover" class="product-image" loading="lazy"
+                <img th:src="${book.imageUrl}" alt="Book Cover" class="product-image" loading="lazy"
                     onerror="this.onerror=null; this.src='https://placehold.co/200x300?text=No+Cover&font=roboto'">
                 <div class="product-name" th:text="${book.name}">Book Name</div>
                 <div class="product-price" th:text="${'₫' + #numbers.formatInteger(book.price, 0, 'COMMA')}">Price</div>
                 <div class="product-info">
-                    <a th:href="@{/publisher/{id}(id=${book.publisher.id})}" th:text="${book.publisher.name}"
+                    <a th:href="@{/publisher/{id}(id=${book.publisherId})}" th:text="${book.publisherName}"
                         onclick="event.stopPropagation();">Publisher</a>
                 </div>
                 <div class="product-info" th:text="${'Year: ' + book.publishYear}">Year</div>

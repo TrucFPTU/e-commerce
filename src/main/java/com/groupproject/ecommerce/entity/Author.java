@@ -13,6 +13,6 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long authorId;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(150)")
     private String name;
 }

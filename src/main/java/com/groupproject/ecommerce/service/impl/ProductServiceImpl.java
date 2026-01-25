@@ -1,0 +1,111 @@
+// service/impl/ProductServiceImpl.java
+package com.groupproject.ecommerce.service.impl;
+
+import com.groupproject.ecommerce.dto.response.BookCardRes;
+import com.groupproject.ecommerce.entity.Product;
+import com.groupproject.ecommerce.enums.ProductStatus;
+import com.groupproject.ecommerce.repository.ProductRepository;
+import com.groupproject.ecommerce.service.inter.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ProductServiceImpl implements ProductService {
+
+    private final ProductRepository productRepository;
+
+    @Override
+    public List<BookCardRes> getBooksBySupplier(Long supplierId) {
+        return productRepository.findActiveBySupplierId(supplierId)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
+
+
+    @Override
+    public List<BookCardRes> getBooksByAuthor(Long authorId) {
+        return productRepository.findActiveByAuthorId(authorId)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
+
+    @Override
+    public List<BookCardRes> getBooksByPublisher(Long publisherId) {
+        return productRepository.findActiveByPublisherId(publisherId)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
+
+
+    @Override
+    public List<BookCardRes> getHomeBooks() {
+        return productRepository.findByStatus(ProductStatus.ACTIVE)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
+
+    @Override
+    public BookCardRes getBookCardById(Long id) {
+        Product p = productRepository.findByProductIdAndStatus(id, ProductStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+        return toBookCardRes(p);
+    }
+
+    private BookCardRes toBookCardRes(Product p) {
+        Long authorId = (p.getAuthors() != null && !p.getAuthors().isEmpty())
+                ? p.getAuthors().get(0).getAuthorId()
+                : null;
+
+        String authorName = (p.getAuthors() != null && !p.getAuthors().isEmpty())
+                ? p.getAuthors().get(0).getName()
+                : "Unknown";
+
+        Long publisherId = (p.getPublisher() != null) ? p.getPublisher().getPublisherId() : null;
+        String publisherName = (p.getPublisher() != null) ? p.getPublisher().getName() : "Unknown";
+
+        Long supplierId = (p.getSupplier() != null) ? p.getSupplier().getSupplierId() : null;
+        String supplierName = (p.getSupplier() != null) ? p.getSupplier().getName() : "Unknown";
+
+        return BookCardRes.builder()
+                .id(p.getProductId())
+                .name(p.getName())
+                .imageUrl(p.getImageUrl())
+                .price(p.getPrice())
+                .publishYear(p.getPublishYear())
+                .stock(p.getStock())
+                .authorId(authorId)
+                .authorName(authorName)
+                .publisherId(publisherId)
+                .publisherName(publisherName)
+                .supplierId(supplierId)
+                .supplierName(supplierName)
+                .description(p.getDescription())
+                .build();
+    }
+
+
+
+
+    @Override
+    public List<BookCardRes> getRelatedBooks(Long productId) {
+        Product current = productRepository.findByProductIdAndStatus(productId, ProductStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("Book not found: " + productId));
+
+        Long categoryId = current.getCategory().getCategoryId();
+
+        return productRepository.findRandomRelatedByCategory(categoryId, productId)
+                .stream()
+                .map(this::toBookCardRes)
+                .toList();
+    }
+
+
+
+}

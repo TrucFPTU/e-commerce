@@ -120,16 +120,16 @@
 
     <div class="profile-container">
         <div class="profile-header">
-            <img class="avatar-large" th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullname}"
+            <img class="avatar-large" th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullName}"
                 alt="Avatar">
-            <div class="profile-name" th:text="${user.fullname}">User Name</div>
+            <div class="profile-name" th:text="${user.fullName}">User Name</div>
         </div>
 
-        <form id="profileForm" action="/profile/update" method="post">
-            <div class="profile-field">
+        <form id="profileForm" th:action="@{/profile/update}" method="post">
+        <div class="profile-field">
                 <label>Full Name <button type="button" class="edit-btn"
                         onclick="enableEdit('fullname')">✏️</button></label>
-                <input type="text" id="fullname" name="fullname" th:value="${user.fullname}" disabled>
+                <input type="text" id="fullname" name="fullname" th:value="${user.fullName}" disabled>
             </div>
 
             <div class="profile-field">
@@ -140,7 +140,7 @@
             <div class="profile-field">
                 <label>Password <button type="button" class="edit-btn"
                         onclick="enableEdit('password')">✏️</button></label>
-                <input type="password" id="password" name="password" th:value="${user.password}" disabled>
+                <input type="password" id="password" name="password" placeholder="Enter new password" disabled>
             </div>
 
             <div id="saveActions" class="actions hidden">
@@ -149,7 +149,7 @@
             </div>
         </form>
 
-        <a href="/home" class="back-link">← Back to Home</a>
+        <a href="/homepage" class="back-link">← Back to Home</a>
     </div>
 
     <script>

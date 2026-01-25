@@ -13,6 +13,6 @@ public class Publisher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long publisherId;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(150)")
     private String name;
 }

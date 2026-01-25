@@ -1,40 +1,64 @@
-<!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Login</title>
     <style>
-        .box { max-width: 420px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
-        .row { margin-bottom: 12px; }
-        .err { color: #d00; font-size: 13px; margin-top: 6px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
     </style>
 </head>
+
 <body>
-<div class="box">
-<h1>Đăng nhập</h1>
-    <div class="err" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+<h2>Login</h2>
 
-    <form th:action="@{/login}" th:object="${loginRequest}" method="post">
-    <div class="row">
-        <label>Email</label>
-        <input type="text" th:field="*{email}" placeholder="email@example.com"/>
-        <div class="err" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
-    </div>
-    <div class="row">
-        <label>Password</label>
-        <input type="text" th:field="*{passWord}" placeholder="••••••••" />
-        <div class="err" th:if = "${#fields.hasErrors('passWord')}" th:errors="*{passWord}"></div>
-    </div>
+<p class="error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
 
-    <button type="submit">Đăng nhập</button>
+<form th:action="@{/login}" th:object="${loginRequest}" method="post">
+    <input type="text" th:field="*{email}" placeholder="Email" required>
+    <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+    <input type="password" th:field="*{passWord}" placeholder="Password" required>
+    <div class="error" th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}"></div>
 
+    <button type="submit">Login</button>
 </form>
-</div>
+
+<p>Don't have an account? <a th:href="@{/register}">Register</a></p>
 
 </body>
+
 </html>

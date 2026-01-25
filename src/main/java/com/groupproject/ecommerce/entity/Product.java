@@ -21,10 +21,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(1000)")
     private String description;
 
     @Column(length = 500)
@@ -43,16 +43,17 @@ public class Product {
     private ProductStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryId", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "publisherId", nullable = false)
+    @JoinColumn(name = "publisher_id", nullable = false)
     private Publisher publisher;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supplierId", nullable = false)
+    @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
+
 
     @ManyToMany
     @JoinTable(

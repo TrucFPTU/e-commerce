@@ -209,9 +209,9 @@
                     <div th:if="${user}" class="user-profile">
                         <a href="/profile">
                             <img class="avatar"
-                                th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullname}"
+                                th:src="${'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.fullName}"
                                 alt="Avatar">
-                            <span class="user-name" th:text="${user.fullname}">User</span>
+                            <span class="user-name" th:text="${user.fullName}">User</span>
                         </a>
                         <a href="/logout">Logout</a>
                     </div>

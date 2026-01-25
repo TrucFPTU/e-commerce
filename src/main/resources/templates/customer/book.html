@@ -267,16 +267,16 @@
 
     <div class="container">
         <div class="breadcrumb">
-            <a href="/home">Home</a>
+            <a th:href="@{/homepage}">Home</a>
             <span> / </span>
-            <a th:href="@{/author/{id}(id=${book.author.id})}" th:text="${book.author.name}">Author</a>
+            <span th:text="${book.authorName}">Author</span>
             <span> / </span>
             <span th:text="${book.name}">Book Name</span>
         </div>
 
         <div class="book-detail">
             <div class="book-image">
-                <img th:src="${book.imageURL}" alt="Book Cover"
+                <img th:src="${book.imageUrl}" alt="Book Cover"
                     onerror="this.onerror=null; this.src='https://placehold.co/200x300?text=No+Cover&font=roboto'">
             </div>
             <div class="book-info">
@@ -297,22 +297,22 @@
                     <div class="meta-item">
                         <span class="meta-label">Author</span>
                         <span class="meta-value">
-                            <a th:href="@{/author/{id}(id=${book.author.id})}" th:text="${book.author.name}">Author
+                            <a th:href="@{/author/{id}(id=${book.authorId})}" th:text="${book.authorName}">Author
                                 Name</a>
                         </span>
                     </div>
                     <div class="meta-item">
                         <span class="meta-label">Publisher</span>
                         <span class="meta-value">
-                            <a th:href="@{/publisher/{id}(id=${book.publisher.id})}"
-                                th:text="${book.publisher.name}">Publisher Name</a>
+                            <a th:href="@{/publisher/{id}(id=${book.publisherId})}"
+                                th:text="${book.publisherName}">Publisher Name</a>
                         </span>
                     </div>
                     <div class="meta-item">
                         <span class="meta-label">Supplier</span>
                         <span class="meta-value">
-                            <a th:href="@{/supplier/{id}(id=${book.supplier.id})}"
-                                th:text="${book.supplier.name}">Supplier Name</a>
+                            <a th:href="@{/supplier/{id}(id=${book.supplierId})}"
+                                th:text="${book.supplierName}">Supplier Name</a>
                         </span>
                     </div>
                     <div class="meta-item">
@@ -342,11 +342,11 @@
 
         <div th:if="${!relatedBooks.isEmpty()}">
             <div class="section-title">
-                <h2 th:text="${'More by ' + book.author.name}">More by Author</h2>
+                <h2 th:text="${'More by ' + book.authorName}">More by Author</h2>
             </div>
             <div class="product-grid">
                 <a th:each="related : ${relatedBooks}" th:href="@{/book/{id}(id=${related.id})}" class="product-card">
-                    <img th:src="${related.imageURL}" alt="Book Cover" class="product-image" loading="lazy"
+                    <img th:src="${related.imageUrl}" alt="Book Cover" class="product-image" loading="lazy"
                         onerror="this.onerror=null; this.src='https://placehold.co/200x300?text=No+Cover&font=roboto'">
                     <div class="product-name" th:text="${related.name}">Book Name</div>
                     <div class="product-price" th:text="${'₫' + #numbers.formatInteger(related.price, 0, 'COMMA')}">
