@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookStore - Home</title>
+    <title th:text="${publisher.name + ' - BookStore'}">Publisher - BookStore</title>
     <style>
         * {
             margin: 0;
@@ -23,12 +23,75 @@
             padding: 0 20px;
         }
 
-        .banner {
-            background-color: #fff;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
+        .breadcrumb {
+            background: white;
+            padding: 15px 20px;
             border-radius: 2px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #ee4d2d;
+            text-decoration: none;
+        }
+
+        .breadcrumb span {
+            color: #666;
+        }
+
+        .entity-header {
+            background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
+            border-radius: 2px;
+            padding: 40px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .entity-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #2196f3;
+            flex-shrink: 0;
+        }
+
+        .entity-info h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .entity-info p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
         }
 
         .section-title {
@@ -68,7 +131,6 @@
             object-fit: cover;
             margin-bottom: 10px;
             background-color: #f0f0f0;
-            image-rendering: optimizeSpeed;
         }
 
         .product-name {
@@ -92,21 +154,13 @@
             margin-bottom: 3px;
         }
 
-        .stock-status {
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .stock-active {
-            color: #26aa99;
-        }
-
-        .stock-inactive {
+        .product-info a {
             color: #ee4d2d;
+            text-decoration: none;
         }
 
-        .stock-low {
-            color: #ff9800;
+        .product-info a:hover {
+            text-decoration: underline;
         }
 
         .footer {
@@ -116,6 +170,14 @@
             border-top: 1px solid #ddd;
             text-align: center;
             color: #666;
+        }
+
+        .no-books {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            border-radius: 2px;
         }
 
         .pagination {
@@ -162,32 +224,43 @@
     <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container">
-        <div class="banner">
-            <h1>Welcome to BookStore</h1>
-            <p>Discover amazing books at great prices</p>
+        <div class="breadcrumb">
+            <a th:href="@{/homepage}">Home</a>
+            <span> / Publishers / </span>
+            <span th:text="${publisher.name}">Publisher Name</span>
+        </div>
+
+        <div class="entity-header">
+            <div class="entity-avatar">📚</div>
+            <div class="entity-info">
+                <h1 th:text="${publisher.name}">Publisher Name</h1>
+                <p>Publisher</p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" th:text="${#lists.size(books)}">0</div>
+                        <div class="stat-label">Books</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="section-title">
-            <h2>Books</h2>
+            <h2 th:text="${'Published by ' + publisher.name}">Books from Publisher</h2>
         </div>
 
-        <div class="product-grid" id="product-grid">
-            <a th:href="@{/book/{id}(id=${book.id})}" class="product-card" th:each="book : ${books}"
-                th:data-name="${book.name}" th:data-author="${book.author.name}"
-                th:data-publisher="${book.publisher.name}">
-                <img th:src="${book.imageURL}" alt="Book Cover" class="product-image" loading="lazy"
+        <div th:if="${!books.isEmpty()}" class="product-grid">
+            <div th:each="book : ${books}" th:onclick="'window.location.href=\'/book/' + ${book.id} + '\''"
+                class="product-card">
+                <img th:src="${book.imageUrl}" alt="Book Cover" class="product-image" loading="lazy"
                     onerror="this.onerror=null; this.src='https://placehold.co/200x300?text=No+Cover&font=roboto'">
                 <div class="product-name" th:text="${book.name}">Book Name</div>
                 <div class="product-price" th:text="${'₫' + #numbers.formatInteger(book.price, 0, 'COMMA')}">Price</div>
-                <div class="product-info" th:text="${'By ' + book.author.name}">Author</div>
-                <div class="product-info" th:text="${'Publisher: ' + book.publisher.name}">Publisher</div>
-                <div class="product-info" th:text="${'Year: ' + book.publishYear}">Year</div>
-                <div class="stock-status"
-                    th:classappend="${book.stock > 50} ? 'stock-active' : (${book.stock > 0} ? 'stock-low' : 'stock-inactive')">
-                    <span th:if="${book.stock > 0}" th:text="${'Stock: ' + book.stock}"></span>
-                    <span th:if="${book.stock == 0}">Out of Stock</span>
+                <div class="product-info">
+                    By <a th:href="@{/author/{id}(id=${book.authorId})}" th:text="${book.authorName}"
+                        onclick="event.stopPropagation();">Author</a>
                 </div>
-            </a>
+                <div class="product-info" th:text="${'Year: ' + book.publishYear}">Year</div>
+            </div>
         </div>
 
         <div class="pagination" id="pagination"></div>
@@ -196,19 +269,19 @@
             style="display: none; text-align: center; padding: 40px; background: white; border-radius: 2px;">
             <p style="font-size: 18px; color: #666;">No books found matching your search.</p>
         </div>
-    </div>
 
-    <div class="footer">
-        <p>&copy; 2026 BookStore. All rights reserved.</p>
-        <p>Trusted online bookstore with thousands of titles</p>
+        <div th:if="${books.isEmpty()}" class="no-books">
+            <p>No books available from this publisher.</p>
+        </div>
     </div>
 
     <script>
         (function () {
             var searchInput = document.querySelector('input[name="search"]');
-            var productGrid = document.getElementById('product-grid');
+            var productGrid = document.querySelector('.product-grid');
             var pagination = document.getElementById('pagination');
             var noResults = document.getElementById('no-results');
+            if (!productGrid) return;
             var allCards = Array.from(productGrid.querySelectorAll('.product-card'));
 
             var ITEMS_PER_PAGE = 10;
@@ -218,10 +291,8 @@
             function getFilteredCards(searchTerm) {
                 if (!searchTerm) return allCards;
                 return allCards.filter(function (card) {
-                    var name = (card.dataset.name || '').toLowerCase();
-                    var author = (card.dataset.author || '').toLowerCase();
-                    var publisher = (card.dataset.publisher || '').toLowerCase();
-                    return name.includes(searchTerm) || author.includes(searchTerm) || publisher.includes(searchTerm);
+                    var name = (card.querySelector('.product-name').textContent || '').toLowerCase();
+                    return name.includes(searchTerm);
                 });
             }
 
@@ -231,12 +302,16 @@
 
                 allCards.forEach(function (card) { card.style.display = 'none'; });
 
-                filteredCards.slice(start, end).forEach(function (card) {
-                    card.style.display = '';
-                });
-
-                noResults.style.display = filteredCards.length === 0 ? 'block' : 'none';
-                renderPagination();
+                if (filteredCards.length === 0) {
+                    if (noResults) noResults.style.display = 'block';
+                    pagination.style.display = 'none';
+                } else {
+                    if (noResults) noResults.style.display = 'none';
+                    filteredCards.slice(start, end).forEach(function (card) {
+                        card.style.display = '';
+                    });
+                    renderPagination();
+                }
             }
 
             function renderPagination() {
@@ -290,11 +365,20 @@
                         renderPage();
                     }, 150);
                 });
+
+                searchInput.closest('form').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                });
             }
 
             renderPage();
         })();
     </script>
+
+    <div class="footer">
+        <p>&copy; 2026 BookStore. All rights reserved.</p>
+        <p>Trusted online bookstore with thousands of titles</p>
+    </div>
 </body>
 
 </html>

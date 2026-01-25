@@ -18,6 +18,12 @@ public class AuthController {
     private final AuthService authService;
     private final String SESSION_USER = "LOGIN_USER";
 
+    @GetMapping()
+    public String showLoginDefault(Model model) {
+        model.addAttribute("loginRequest", new LoginRequest());
+        return "auth/login";
+    }
+
     @GetMapping("/login")
     public String showLogin(Model model) {
         model.addAttribute("loginRequest", new LoginRequest());
