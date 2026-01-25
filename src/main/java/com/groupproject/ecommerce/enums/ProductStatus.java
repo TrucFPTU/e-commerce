@@ -1,7 +1,7 @@
 package com.groupproject.ecommerce.enums;
 
 public enum ProductStatus {
-    AVAILABLE,
+    ACTIVE,
     OUT_OF_STOCK,
     DISCONTINUED
 }
