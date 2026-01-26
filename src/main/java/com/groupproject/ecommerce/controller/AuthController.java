@@ -1,6 +1,7 @@
 package com.groupproject.ecommerce.controller;
 
 import com.groupproject.ecommerce.dto.request.LoginRequest;
+import com.groupproject.ecommerce.dto.request.RegisterRequest;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.service.inter.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -18,11 +19,11 @@ public class AuthController {
     private final AuthService authService;
     private final String SESSION_USER = "LOGIN_USER";
 
-    @GetMapping()
-    public String showLoginDefault(Model model) {
-        model.addAttribute("loginRequest", new LoginRequest());
-        return "auth/login";
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/homepage";
     }
+
 
     @GetMapping("/login")
     public String showLogin(Model model) {
@@ -53,6 +54,28 @@ public class AuthController {
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
+    }
+
+    @GetMapping("/register")
+    public String showRegister(Model model) {
+        model.addAttribute("registerRequest", new RegisterRequest());
+        return "customer/register";
+    }
+
+    @PostMapping("/register")
+    public String doRegister(@Valid @ModelAttribute("registerRequest") RegisterRequest req,
+                             BindingResult bindingResult,
+                             Model model) {
+        if (bindingResult.hasErrors()) return "customer/register";
+
+        try {
+            authService.register(req);
+            model.addAttribute("successMessage", "Đăng ký thành công. Vui lòng đăng nhập.");
+            return "auth/login"; // hoặc redirect:/login nếu bạn muốn
+        } catch (RuntimeException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "customer/register";
+        }
     }
 
 }

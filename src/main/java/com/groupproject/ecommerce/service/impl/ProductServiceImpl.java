@@ -19,7 +19,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public String getProductsForPrompt(int limit) {
-        // lấy hàng ACTIVE (dùng luôn getHomeBooks() cho đơn giản, hạn chế prompt quá dài)
         List<BookCardRes> list = getHomeBooks();
         if (list == null || list.isEmpty()) return "\n\n(Hiện chưa có sản phẩm để gợi ý.)";
 

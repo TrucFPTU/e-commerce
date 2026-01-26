@@ -8,6 +8,8 @@
     let pendingFiles = []; 
     let hasUnread = false;
     let lastSeenMessageId = null;
+    let currentUserId = null;
+
 
 
 
@@ -39,14 +41,20 @@
     }
 
 
-    function openBox() {
+    async function openBox() {
+        // Nếu chưa bootstrap thì bootstrap trước
+        if (!isBootstrapped) {
+            const ok = await bootstrap();
+            if (!ok) return; // chưa login -> fetchJsonOrRedirect đã tự redirect /login
+        }
+
         $("chatBox").classList.remove("hidden");
         setUnread(false);
+
         const last = getLastRenderedMessageId();
         if (last) lastSeenMessageId = last;
-
-        if (!isBootstrapped) bootstrap();
     }
+
 
     function closeBox() {
         $("chatBox").classList.add("hidden");
@@ -64,7 +72,7 @@
         const data = await fetchJsonOrRedirect(`/chat/bootstrap?limit=30`);
         if (!data) {
             log("bootstrap failed or not logged in");
-            return;
+            return false; // ✅ quan trọng
         }
 
         const staffNameEl = document.getElementById("chatStaffName");
@@ -75,15 +83,25 @@
         conversationId = Number(data["conversationId"]);
         oldestMessageId = data["oldestMessageId"] ? Number(data["oldestMessageId"]) : null;
 
-        if (data.currentUserId) {
-            window.__CHAT_CURRENT_USER_ID = Number(data.currentUserId);
+        // FIX #2: set currentUserId chuẩn, ưu tiên từ backend
+        currentUserId = Number(data.currentUserId || 0);
+
+        if (!currentUserId) {
+            // fallback: nếu backend không trả thì mới lấy từ window
+            currentUserId = Number(window.__CURRENT_USER_ID || 0);
         }
+
+        console.log("ChatWidget bootstrap currentUserId =", currentUserId);
+
+
 
         renderMessages(data.messages || []);
         isBootstrapped = true;
 
         connectWs();
+        return true; // ✅
     }
+
 
 
     function connectWs() {
@@ -254,15 +272,49 @@
         return null;
     }
 
+    function getSenderId(m) {
+        if (!m) return 0;
+
+        // ưu tiên senderId chuẩn
+        let v = m.senderId;
+
+        // fallback các key hay gặp (dùng bracket để khỏi IDE chửi)
+        if (v == null) v = m["senderUserId"];
+        if (v == null) v = m["fromUserId"];
+        if (v == null && m.sender) v = m.sender.userId ?? m.sender.id;
+
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+
 
     function isMeMessage(m) {
-        const me = window.__CHAT_CURRENT_USER_ID;
-        return me && Number(m.senderId) === Number(me);
+        const myId = Number(currentUserId || 0);
+        const sid = getSenderId(m);
+        return myId > 0 && sid > 0 && sid === myId;
     }
+
+
+
+
 
     function appendMessage(m, scrollToBottom) {
         const box = $("chatMessages");
         if (m.messageId && hasMessageId(box, m.messageId)) return;
+        // DEBUG 1 lần cho dễ bắt lỗi
+        console.log("render msg:", {
+            my: currentUserId,
+            senderId: m.senderId,
+            senderUserId: m["senderUserId"],
+            fromUserId: m["fromUserId"],
+            senderObj: m.sender,
+            pickedSid: getSenderId(m),
+            isMe: isMeMessage(m),
+            text: m.content
+        });
+
+
 
         const isMe = isMeMessage(m);
 
@@ -669,7 +721,15 @@
         ensureAttachmentUi();
         ensureUnreadDot();
 
-        $("chatToggle").addEventListener("click", openBox);
+        $("chatToggle").addEventListener("click", async () => {
+            const box = $("chatBox");
+            if (!box.classList.contains("hidden")) {
+                closeBox();
+                return;
+            }
+            await openBox();
+        });
+
         $("chatClose").addEventListener("click", closeBox);
         $("chatSend").addEventListener("click", sendText);
         $("chatText").addEventListener("keydown", (e) => {

@@ -37,9 +37,7 @@ public class CustomerController {
     public String customer(@RequestParam(value = "search", required = false) String search,
                            Model model,
                            HttpSession session) {
-        User user = getUserOrRedirect(session);
-        if (user == null) return "redirect:/login";
-
+        User user = (User) session.getAttribute("LOGIN_USER");
         model.addAttribute("user", user);
 
         if (search == null || search.trim().isEmpty()) {
