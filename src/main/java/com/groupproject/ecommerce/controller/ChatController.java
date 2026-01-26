@@ -1,5 +1,4 @@
 package com.groupproject.ecommerce.controller;
-
 import com.groupproject.ecommerce.service.inter.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import jakarta.servlet.http.HttpSession;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +66,6 @@ public class ChatController {
         if (userMessage == null || userMessage.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Message is required"));
         }
-
         try {
             List<Map<String, String>> history = getChatHistory(session);
             history.add(Map.of("role", "user", "content", userMessage));

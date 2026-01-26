@@ -61,6 +61,46 @@
         .support-staff {
             color: black;
         }
+        #chatBox #chatMessages {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chatBox .msg-row {
+            display: flex !important;
+            width: 100%;
+            margin: 6px 0;
+        }
+
+        #chatBox .msg-row.msg-me {
+            justify-content: flex-end !important;
+        }
+
+        #chatBox .msg-row.msg-other {
+            justify-content: flex-start !important;
+        }
+
+        #chatBox .bubble {
+            max-width: 75%;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #e6e6e6;
+            word-break: break-word;
+        }
+
+        /* bubble của mình */
+        #chatBox .bubble.me {
+            margin-left: auto !important;
+            background: #CFE8FF;
+            color: black;
+            border-color: transparent;
+        }
+
+
+
+        /* link/file cho đẹp */
+        #chatBox .bubble a { color: inherit; }
     </style>
 
 </div>
