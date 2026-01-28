@@ -1,9 +1,15 @@
 package com.groupproject.ecommerce.controller;
 
 import com.groupproject.ecommerce.dto.request.AddToCartRequest;
+import com.groupproject.ecommerce.dto.request.PaymentRequest;
+import com.groupproject.ecommerce.dto.response.PaymentResponse;
 import com.groupproject.ecommerce.entity.CartItem;
+import com.groupproject.ecommerce.entity.Order;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.service.inter.CartService;
+import com.groupproject.ecommerce.service.inter.OrderService;
+import com.groupproject.ecommerce.service.inter.PaymentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +28,8 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
+    private final OrderService orderService;
+    private final PaymentService paymentService;
     private static final String SESSION_USER = "LOGIN_USER";
 
     @PostMapping("/add")
@@ -125,7 +133,86 @@ public class CartController {
         return "redirect:/cart";
     }
 
+    @PostMapping("/checkout")
+    public String checkout(@RequestParam String phone,
+                          @RequestParam String address,
+                          @RequestParam String paymentMethod,
+                          HttpSession session,
+                          HttpServletRequest request,
+                          RedirectAttributes redirectAttributes) {
+        
+        User user = (User) session.getAttribute(SESSION_USER);
+        if (user == null) {
+            return "redirect:/login";
+        }
 
+        try {
+            // Lấy giỏ hàng
+            List<CartItem> cartItems = cartService.getCartItems(user);
+            if (cartItems.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng trống");
+                return "redirect:/cart";
+            }
 
+            // Tính tổng tiền
+            BigDecimal totalAmount = cartItems.stream()
+                    .map(item -> item.getUnitPriceSnapshot().multiply(BigDecimal.valueOf(item.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+            // Tạo đơn hàng với status PROCESSING
+            Order order = orderService.createOrderFromCart(user, cartItems, phone, address, totalAmount);
+
+            // Xóa giỏ hàng sau khi tạo đơn thành công
+            cartService.clearCart(user);
+
+            // Xử lý theo phương thức thanh toán
+            if ("CASH".equalsIgnoreCase(paymentMethod)) {
+                // Thanh toán tiền mặt - chuyển đến trang thành công
+                redirectAttributes.addFlashAttribute("status", "success");
+                redirectAttributes.addFlashAttribute("message", "Đặt hàng thành công! Bạn sẽ thanh toán khi nhận hàng.");
+                redirectAttributes.addFlashAttribute("orderCode", order.getOrderCode());
+                redirectAttributes.addFlashAttribute("amount", totalAmount.longValue());
+                redirectAttributes.addFlashAttribute("paymentMethod", "COD");
+                return "redirect:/payment/result";
+            } else if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
+                // Thanh toán VNPay - tạo payment URL
+                PaymentRequest paymentRequest = new PaymentRequest();
+                paymentRequest.setOrderId(order.getOrderId());
+                paymentRequest.setAmount(totalAmount.longValue());
+                paymentRequest.setOrderInfo("Thanh toan don hang " + order.getOrderCode());
+
+                // Lấy IP address
+                String ipAddress = getIpAddress(request);
+
+                // Tạo VNPay payment URL
+                PaymentResponse paymentResponse = paymentService.createVNPayPayment(paymentRequest, ipAddress);
+
+                if ("success".equals(paymentResponse.getStatus())) {
+                    // Redirect đến VNPay
+                    return "redirect:" + paymentResponse.getPaymentUrl();
+                } else {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Không thể tạo thanh toán: " + paymentResponse.getMessage());
+                    return "redirect:/cart";
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Phương thức thanh toán không hợp lệ");
+                return "redirect:/cart";
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/cart";
+        }
+    }
+
+    private String getIpAddress(HttpServletRequest request) {
+        String ipAddress = request.getHeader("X-FORWARDED-FOR");
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getHeader("X-Real-IP");
+        }
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getRemoteAddr();
+        }
+        return ipAddress;
+    }
 }
