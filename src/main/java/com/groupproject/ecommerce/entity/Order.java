@@ -32,7 +32,7 @@ public class Order {
     @Column(nullable = false, length = 30)
     private String phone;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(500)")
     private String address;
 
     @Column(nullable = false, precision = 18, scale = 2)
