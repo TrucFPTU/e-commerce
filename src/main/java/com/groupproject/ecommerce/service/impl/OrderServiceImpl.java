@@ -51,6 +51,11 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findByUserUserIdOrderByPlacedAtDesc(user.getUserId());
     }
 
+    @Override
+    public List<Order> getOrdersByUserAndStatus(User user, OrderStatus status) {
+        return orderRepository.findByUserUserIdAndStatusOrderByPlacedAtDesc(user.getUserId(), status);
+    }
+
     private String generateOrderCode() {
         return "ORD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }

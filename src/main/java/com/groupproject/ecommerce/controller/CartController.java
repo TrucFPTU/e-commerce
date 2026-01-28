@@ -137,6 +137,7 @@ public class CartController {
     public String checkout(@RequestParam String phone,
                           @RequestParam String address,
                           @RequestParam String paymentMethod,
+                          @RequestParam String selectedItems,
                           HttpSession session,
                           HttpServletRequest request,
                           RedirectAttributes redirectAttributes) {
@@ -147,14 +148,40 @@ public class CartController {
         }
 
         try {
-            // Lấy giỏ hàng
-            List<CartItem> cartItems = cartService.getCartItems(user);
+            // Kiểm tra có sản phẩm được chọn không
+            if (selectedItems == null || selectedItems.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn ít nhất một sản phẩm");
+                return "redirect:/cart";
+            }
+            
+            // Parse danh sách ID được chọn
+            String[] itemIds = selectedItems.split(",");
+            List<Long> selectedCartItemIds = new java.util.ArrayList<>();
+            for (String id : itemIds) {
+                try {
+                    selectedCartItemIds.add(Long.parseLong(id.trim()));
+                } catch (NumberFormatException e) {
+                    // Skip invalid IDs
+                }
+            }
+            
+            if (selectedCartItemIds.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không có sản phẩm hợp lệ được chọn");
+                return "redirect:/cart";
+            }
+            
+            // Lấy giỏ hàng và lọc chỉ những item được chọn
+            List<CartItem> allCartItems = cartService.getCartItems(user);
+            List<CartItem> cartItems = allCartItems.stream()
+                    .filter(item -> selectedCartItemIds.contains(item.getCartItemId()))
+                    .toList();
+            
             if (cartItems.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Giỏ hàng trống");
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy sản phẩm được chọn");
                 return "redirect:/cart";
             }
 
-            // Tính tổng tiền
+            // Tính tổng tiền chỉ cho các item được chọn
             BigDecimal totalAmount = cartItems.stream()
                     .map(item -> item.getUnitPriceSnapshot().multiply(BigDecimal.valueOf(item.getQuantity())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -162,8 +189,10 @@ public class CartController {
             // Tạo đơn hàng với status PROCESSING
             Order order = orderService.createOrderFromCart(user, cartItems, phone, address, totalAmount);
 
-            // Xóa giỏ hàng sau khi tạo đơn thành công
-            cartService.clearCart(user);
+            // Xóa chỉ những sản phẩm đã được chọn thanh toán khỏi giỏ hàng
+            for (CartItem item : cartItems) {
+                cartService.removeCartItem(item.getCartItemId());
+            }
 
             // Xử lý theo phương thức thanh toán
             if ("CASH".equalsIgnoreCase(paymentMethod)) {

@@ -221,6 +221,52 @@
             gap: 10px;
         }
         
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
         @media (max-width: 768px) {
             .order-header {
                 flex-direction: column;
@@ -247,6 +293,14 @@
                 width: 100%;
                 text-align: center;
             }
+            
+            .filter-buttons {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -255,8 +309,31 @@
 
 <div class="container">
     <div class="page-header">
-        <h1>📦 Lịch Sử Đơn Hàng</h1>
+        <h1>📦 Đơn Hàng</h1>
         <p>Quản lý và theo dõi tất cả đơn hàng của bạn</p>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-buttons">
+            <a th:href="@{/orders}" 
+               class="filter-btn"
+               th:classappend="${currentStatus == null || currentStatus == ''} ? 'active' : ''">Tất cả</a>
+            <a th:href="@{/orders(status=PROCESSING)}"
+               class="filter-btn"
+               th:classappend="${currentStatus == 'PROCESSING'} ? 'active' : ''">Đang xử lý</a>
+            <a th:href="@{/orders(status=SHIPPING)}"
+               class="filter-btn"
+               th:classappend="${currentStatus == 'SHIPPING'} ? 'active' : ''">Đang giao hàng</a>
+            <a th:href="@{/orders(status=COMPLETED)}"
+               class="filter-btn"
+               th:classappend="${currentStatus == 'COMPLETED'} ? 'active' : ''">Hoàn thành</a>
+            <a th:href="@{/orders(status=CANCELLED)}"
+               class="filter-btn"
+               th:classappend="${currentStatus == 'CANCELLED'} ? 'active' : ''">Đã hủy</a>
+            <a th:href="@{/orders(status=RETURNED)}"
+               class="filter-btn"
+               th:classappend="${currentStatus == 'RETURNED'} ? 'active' : ''">Đã trả hàng</a>
+        </div>
     </div>
 
     <div th:if="${orders.isEmpty()}" class="empty-state">

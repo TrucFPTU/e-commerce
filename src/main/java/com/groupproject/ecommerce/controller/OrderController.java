@@ -3,6 +3,7 @@ package com.groupproject.ecommerce.controller;
 import com.groupproject.ecommerce.entity.Order;
 import com.groupproject.ecommerce.entity.PaymentTransaction;
 import com.groupproject.ecommerce.entity.User;
+import com.groupproject.ecommerce.enums.OrderStatus;
 import com.groupproject.ecommerce.repository.PaymentTransactionRepository;
 import com.groupproject.ecommerce.service.inter.OrderService;
 import jakarta.servlet.http.HttpSession;
@@ -12,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,15 +28,31 @@ public class OrderController {
     private static final String SESSION_USER = "LOGIN_USER";
 
     @GetMapping
-    public String viewOrders(HttpSession session, Model model) {
+    public String viewOrders(
+            HttpSession session,
+            Model model,
+            @RequestParam(required = false) String status) {
         User user = (User) session.getAttribute(SESSION_USER);
         if (user == null) {
             return "redirect:/login";
         }
 
-        List<Order> orders = orderService.getOrdersByUser(user);
+        List<Order> orders;
+        if (status != null && !status.isEmpty()) {
+            try {
+                OrderStatus orderStatus = OrderStatus.valueOf(status);
+                orders = orderService.getOrdersByUserAndStatus(user, orderStatus);
+            } catch (IllegalArgumentException e) {
+                orders = orderService.getOrdersByUser(user);
+            }
+        } else {
+            orders = orderService.getOrdersByUser(user);
+        }
+
         model.addAttribute("orders", orders);
         model.addAttribute("user", user);
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("orderStatuses", OrderStatus.values());
 
         return "order/list";
     }
