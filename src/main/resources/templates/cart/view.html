@@ -139,6 +139,9 @@
         <table class="cart-table">
             <thead>
             <tr>
+                <th style="width: 50px; text-align: center;">
+                    <input type="checkbox" id="selectAll" onchange="toggleAll(this)" />
+                </th>
                 <th>Sản phẩm</th>
                 <th>Đơn giá</th>
                 <th>Số lượng</th>
@@ -148,6 +151,12 @@
             </thead>
             <tbody>
             <tr th:each="item : ${cartItems}">
+                <td style="text-align: center;">
+                    <input type="checkbox" class="item-checkbox" 
+                           th:value="${item.cartItemId}"
+                           th:attr="data-price=${item.unitPriceSnapshot}, data-quantity=${item.quantity}"
+                           onchange="updateTotal()" />
+                </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <img th:src="${item.product.imageUrl}" th:alt="${item.product.name}" onerror="this.src='https://via.placeholder.com/80'"/>
@@ -177,14 +186,15 @@
         </table>
 
         <div class="cart-summary">
-            <div>Tổng số lượng: <strong th:text="${cartItems.size()} + ' sản phẩm'"></strong></div>
+            <div>Sản phẩm đã chọn: <strong id="selectedCount">0</strong> / <span th:text="${cartItems.size()}"></span></div>
             <div class="total-row">
-                Tổng tiền: <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                Tổng tiền: <span id="displayTotal">0đ</span>
             </div>
         </div>
 
         <form id="checkoutForm" th:action="@{/cart/checkout}" method="post" style="margin-top: 30px;">
             <input type="hidden" name="paymentMethod" id="paymentMethod" value=""/>
+            <input type="hidden" name="selectedItems" id="selectedItems" value=""/>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                 <h3 style="margin-bottom: 15px;">Thông tin giao hàng</h3>
                 <div style="margin-bottom: 15px;">
@@ -241,13 +251,55 @@
 </div>
 
 <script>
+    // Tính tổng tiền dựa trên các checkbox được chọn
+    function updateTotal() {
+        const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+        let total = 0;
+        let count = 0;
+        
+        checkboxes.forEach(checkbox => {
+            const price = parseFloat(checkbox.dataset.price);
+            const quantity = parseInt(checkbox.dataset.quantity);
+            total += price * quantity;
+            count++;
+        });
+        
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('displayTotal').textContent = formatNumber(total) + 'đ';
+        
+        // Cập nhật trạng thái checkbox "Chọn tất cả"
+        const selectAll = document.getElementById('selectAll');
+        const allCheckboxes = document.querySelectorAll('.item-checkbox');
+        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    }
+    
+    function formatNumber(num) {
+        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+        updateTotal();
+    }
+    
     function showPaymentModal() {
-        // Validate form first
+        // Kiểm tra có sản phẩm nào được chọn không
+        const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+            return;
+        }
+        
+        // Validate form
         const form = document.getElementById('checkoutForm');
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
         }
+        
         document.getElementById('paymentModal').style.display = 'block';
     }
     
@@ -258,7 +310,15 @@
     function confirmPayment() {
         const selected = document.querySelector('input[name="paymentMethodRadio"]:checked');
         if (selected) {
+            // Lấy danh sách cartItemId được chọn
+            const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            
+            // Đặt giá trị vào hidden input
+            document.getElementById('selectedItems').value = selectedIds.join(',');
             document.getElementById('paymentMethod').value = selected.value;
+            
+            // Submit form
             document.getElementById('checkoutForm').submit();
         }
     }
@@ -270,6 +330,11 @@
             closePaymentModal();
         }
     }
+    
+    // Khởi tạo tính tổng khi tải trang
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTotal();
+    });
 </script>
 </body>
 </html>
