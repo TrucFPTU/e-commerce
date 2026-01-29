@@ -91,12 +91,6 @@
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>io.minio</groupId>
-			<artifactId>minio</artifactId>
-			<version>8.5.7</version>
-		</dependency>
-
 		<!-- VNPay dependencies -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
