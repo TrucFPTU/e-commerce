@@ -24,7 +24,7 @@ public class OrderItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 200, columnDefinition = "NVARCHAR(200)")
     private String productNameSnapshot;
 
     @Column(nullable = false, precision = 18, scale = 2)

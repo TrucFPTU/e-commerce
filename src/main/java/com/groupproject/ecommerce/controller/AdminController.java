@@ -72,11 +72,11 @@ public class AdminController {
         }
 
         try {
-            productService.saveProduct(productId, name, description, imageUrl, price, publishYear, 
-                                      stock, status, categoryId, publisherId, supplierId, authorIds);
+            productService.saveProduct(productId, name, description, imageUrl, price, publishYear,
+                    stock, status, categoryId, publisherId, supplierId, authorIds);
 
-            redirectAttributes.addFlashAttribute("message", 
-                productId != null ? "Cập nhật sách thành công!" : "Thêm sách mới thành công!");
+            redirectAttributes.addFlashAttribute("message",
+                    productId != null ? "Cập nhật sách thành công!" : "Thêm sách mới thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }

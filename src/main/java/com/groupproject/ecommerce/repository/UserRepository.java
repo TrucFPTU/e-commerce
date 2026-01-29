@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Nhẹ hơn: chỉ lấy ID staff để random trong service (khuyến nghị)
     @Query("select u.userId from User u where u.role = com.groupproject.ecommerce.enums.Role.STAFF")
     List<Long> findAllStaffIds();
+    
+    // Count users by role for dashboard statistics
+    Long countByRole(Role role);
 }
