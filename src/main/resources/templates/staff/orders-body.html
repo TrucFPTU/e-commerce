@@ -1,10 +1,174 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
-  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;">
-    <h3>Quản lý đơn hàng (sẽ làm sau)</h3>
-    <ul>
-      <li>Xác nhận đơn hàng</li>
-      <li>Theo dõi trạng thái đơn (Pending / Confirmed / Shipping / Completed / Cancelled)</li>
-      <li>Xem chi tiết đơn + sản phẩm trong đơn</li>
-    </ul>
+
+  <style>
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .row.space { justify-content:space-between; }
+    .muted { color:#6b7280; font-size:12px; }
+
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .tab {
+      display:inline-flex; align-items:center; gap:8px;
+      height:34px; padding:0 12px; border-radius:999px;
+      border:1px solid #e5e7eb; background:#fff;
+      font-size:13px; text-decoration:none; color:#111827;
+    }
+    .tab:hover { background:#f3f4f6; }
+    .tab.active { background:#111827; border-color:#111827; color:#fff; }
+
+    .badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 10px; border-radius:999px; font-size:12px;
+      border:1px solid #e5e7eb; background:#f9fafb; color:#111827;
+      white-space:nowrap;
+    }
+    .btn {
+      display:inline-flex; align-items:center; gap:6px;
+      height:34px; padding:0 12px; border-radius:10px;
+      border:1px solid #e5e7eb; background:#fff; cursor:pointer;
+      font-size:13px; color:#111827; text-decoration:none;
+    }
+    .btn:hover { background:#f3f4f6; }
+    .btn.primary { background:#111827; color:#fff; border-color:#111827; }
+    .btn.primary:hover { background:#0b1220; }
+    .btn.danger { background:#fff; border-color:#fecaca; color:#b91c1c; }
+    .btn.danger:hover { background:#fef2f2; }
+
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td { text-align:left; padding:10px 10px; border-top:1px solid #e5e7eb; font-size:13px; vertical-align:top; }
+    th { background:#f9fafb; font-weight:600; border-top:none; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .empty { padding:16px; text-align:center; color:#6b7280; }
+    .code { font-weight:700; }
+  </style>
+
+  <div class="card">
+    <div class="row space">
+      <div>
+        <div style="font-weight:700; font-size:16px;">Quản lý đơn hàng</div>
+      </div>
+    </div>
+
+    <!-- Tabs theo status -->
+    <div class="tabs" style="margin-top:12px;">
+      <a class="tab"
+         th:href="@{/staff/orders(status='PROCESSING')}"
+         th:classappend="${statusFilter == 'PROCESSING'} ? ' active' : ''">
+        🟡 PROCESSING
+      </a>
+
+      <a class="tab"
+         th:href="@{/staff/orders(status='CONFIRMED')}"
+         th:classappend="${statusFilter == 'CONFIRMED'} ? ' active' : ''">
+        🔵 CONFIRMED
+      </a>
+
+      <a class="tab"
+         th:href="@{/staff/orders(status='SHIPPING')}"
+         th:classappend="${statusFilter == 'SHIPPING'} ? ' active' : ''">
+        🟣 SHIPPING
+      </a>
+
+      <a class="tab"
+         th:href="@{/staff/orders(status='COMPLETED')}"
+         th:classappend="${statusFilter == 'COMPLETED'} ? ' active' : ''">
+        🟢 COMPLETED
+      </a>
+
+      <a class="tab"
+         th:href="@{/staff/orders(status='CANCELLED')}"
+         th:classappend="${statusFilter == 'CANCELLED'} ? ' active' : ''">
+        🔴 CANCELLED
+      </a>
+    </div>
+
+    <!-- BẢNG giữ y nguyên như bạn đang có -->
+    <table>
+      <thead>
+      <tr>
+        <th style="width:160px;">Mã đơn</th>
+        <th>Khách / Liên hệ</th>
+        <th style="width:150px;">Tổng tiền</th>
+        <th style="width:190px;">Thời gian</th>
+        <th style="width:170px;">Trạng thái</th>
+        <th style="width:320px;">Thao tác</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:if="${orders == null or #lists.isEmpty(orders)}">
+        <td colspan="6" class="empty">Không có đơn hàng phù hợp.</td>
+      </tr>
+
+      <tr th:each="o : ${orders}">
+        <td>
+          <div class="code" th:text="${o.orderCode}">ODR-XXXX</div>
+          <div class="muted">#<span th:text="${o.orderId}">1</span></div>
+        </td>
+
+        <td>
+          <div>
+            <!-- nếu User không có fullName thì đổi sang email -->
+            <span th:text="${o.user != null ? o.user.fullName  : 'N/A'}">Customer</span>
+          </div>
+          <div class="muted">
+            <span th:text="${o.phone}">phone</span> •
+            <span th:text="${o.address}">address</span>
+          </div>
+        </td>
+
+        <td>
+          <div th:text="${#numbers.formatDecimal(o.total, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</div>
+        </td>
+
+        <td><div th:text="${o.placedAt}">time</div></td>
+
+        <td>
+          <span class="badge"
+                th:text="${o.status.name() == 'PROCESSING' ? '🟡 Chờ xác nhận' :
+                         (o.status.name() == 'CONFIRMED' ? '🔵 Đã xác nhận' :
+                         (o.status.name() == 'SHIPPING' ? '🟣 Đang giao' :
+                         (o.status.name() == 'COMPLETED' ? '🟢 Hoàn tất' :
+                         (o.status.name() == 'CANCELLED' ? '🔴 Đã hủy' : o.status.name()))))}">
+          </span>
+        </td>
+
+        <td>
+          <div class="actions">
+            <a class="btn" th:href="@{/staff/orders/{id}(id=${o.orderId})}">Chi tiết</a>
+
+            <form th:if="${o.status.name() == 'PROCESSING'}"
+                  th:action="@{/staff/orders/{id}/confirm(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Xác nhận đơn này?');">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn primary" type="submit">Confirm</button>
+            </form>
+
+            <form th:if="${o.status.name() == 'CONFIRMED'}"
+                  th:action="@{/staff/orders/{id}/ship(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Chuyển sang SHIPPING?');">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn primary" type="submit">Ship</button>
+            </form>
+
+            <form th:if="${o.status.name() == 'SHIPPING'}"
+                  th:action="@{/staff/orders/{id}/complete(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Hoàn tất (COMPLETED)?');">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn primary" type="submit">Complete</button>
+            </form>
+
+            <form th:if="${o.status.name() == 'PROCESSING' or o.status.name() == 'CONFIRMED'}"
+                  th:action="@{/staff/orders/{id}/cancel(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Hủy đơn này?');">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn danger" type="submit">Cancel</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
+
 </th:block>

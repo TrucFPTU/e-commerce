@@ -186,6 +186,12 @@
            th:classappend="${currentStatus == 'PROCESSING'} ? 'active' : ''">
             Đang xử lý
         </a>
+        <a th:href="@{/orders(status=CONFIRMED)}"
+           class="filter-btn"
+           th:classappend="${currentStatus == 'CONFIRMED'} ? 'active' : ''">
+            Đã xác nhận
+        </a>
+
 
         <a th:href="@{/orders(status=SHIPPING)}"
            class="filter-btn"
@@ -205,11 +211,6 @@
             Đã hủy
         </a>
 
-        <a th:href="@{/orders(status=RETURNED)}"
-           class="filter-btn"
-           th:classappend="${currentStatus == 'RETURNED'} ? 'active' : ''">
-            Đã trả hàng
-        </a>
 
     </div>
 </div>
@@ -234,6 +235,7 @@
                 <b th:switch="${order.status.name()}">
                     <span th:case="'AWAITING_PAYMENT'">Chờ thanh toán</span>
                     <span th:case="'PROCESSING'">Đang xử lý</span>
+                    <span th:case="'CONFIRMED'">Đã xác nhận</span>
                     <span th:case="'SHIPPING'">Đang giao hàng</span>
                     <span th:case="'COMPLETED'">Hoàn thành</span>
                     <span th:case="'CANCELLED'">Đã hủy</span>
