@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+
     private final String SESSION_USER = "LOGIN_USER";
 
     @GetMapping("/")

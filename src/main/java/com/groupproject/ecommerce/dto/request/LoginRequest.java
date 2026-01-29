@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class LoginRequest {
+public class LoginRequest {  
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không đúng định dạng")

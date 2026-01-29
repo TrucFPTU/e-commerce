@@ -350,7 +350,6 @@
             img.style.cursor = "zoom-in";
             img.addEventListener("click", () => openImageViewer(m.attachmentUrl));
 
-
             if (m.originalName || m.content) {
                 const cap = document.createElement("div");
                 cap.textContent = m.originalName || m.content || "";
@@ -379,7 +378,6 @@
         meta.style.color = "#888";
         meta.style.marginTop = "3px";
         bubble.appendChild(meta);
-
         row.appendChild(bubble);
         box.appendChild(row);
 

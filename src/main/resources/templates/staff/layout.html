@@ -4,39 +4,96 @@
 <head>
   <meta charset="UTF-8">
   <title th:text="${pageTitle} ?: 'Staff'">Staff</title>
+
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#f7f7f7; }
     .app { display:flex; height:100vh; }
 
-    .sidebar { width: 240px; background:#111827; color:#fff; padding:16px; box-sizing:border-box; }
+    .sidebar {
+      width:240px;
+      background:#111827;
+      color:#fff;
+      padding:16px;
+      box-sizing:border-box;
+      transition: width .2s ease, padding .2s ease;
+      overflow:hidden;
+    }
+
+    .app.sidebar-collapsed .sidebar {
+      width:0;
+      padding:0;
+    }
+
     .brand { font-weight:700; font-size:18px; margin-bottom:16px; }
     .userbox { font-size:12px; color:#cbd5e1; margin-bottom:16px; }
-    .menu { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
-    .menu a {
-      color:#e5e7eb; text-decoration:none; padding:10px 12px; border-radius:10px;
-      display:flex; align-items:center; gap:10px;
-    }
-    .menu a.active { background:#1f2937; }
-    .menu a:hover { background:#1f2937; }
 
-    .content { flex:1; display:flex; flex-direction:column; }
-    .topbar {
-      height:56px; background:#fff; border-bottom:1px solid #e5e7eb;
-      display:flex; align-items:center; justify-content:space-between; padding:0 16px; box-sizing:border-box;
+    .menu { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+    .menu a, .menu summary {
+      color:#e5e7eb;
+      text-decoration:none;
+      padding:10px 12px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
     }
-    .topbar .title { font-weight:600; }
+
+    .menu a.active, .menu summary.active { background:#1f2937; }
+    .menu a:hover, .menu summary:hover { background:#1f2937; }
+
+    details.submenu { border-radius:10px; }
+    details.submenu[open] summary { background:#1f2937; }
+    details.submenu summary::-webkit-details-marker { display:none; }
+    details.submenu summary::marker { content:""; }
+
+    .submenu-items { display:flex; flex-direction:column; gap:6px; padding-left:10px; margin-top:6px; }
+    .submenu-items a { padding:8px 12px; border-radius:10px; font-size:13px; }
+
+    .content { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+    .topbar {
+      height:56px;
+      background:#fff;
+      border-bottom:1px solid #e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 16px;
+      box-sizing:border-box;
+      gap:12px;
+    }
+
+    .topbar-left { display:flex; align-items:center; gap:10px; min-width:0; }
+    .topbar .title { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .topbar a { text-decoration:none; color:#111827; font-size:13px; }
+
+    .toggle-btn {
+      height:36px;
+      width:36px;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
 
     .page { flex:1; padding:16px; box-sizing:border-box; overflow:auto; }
   </style>
 
-  <!-- page-specific head -->
   <th:block th:replace="${pageHead} ?: ~{}"></th:block>
 </head>
+
 <body>
-<div class="app">
+<div class="app" id="staffApp">
   <aside class="sidebar">
     <div class="brand">STAFF PANEL</div>
+
     <div class="userbox">
       <div th:text="${user.fullName}">Staff Name</div>
       <div th:text="${user.email}">email</div>
@@ -45,14 +102,31 @@
     <nav class="menu">
       <a th:href="@{/staff/chat}"
          th:classappend="${activeMenu}=='chat' ? ' active' : ''">💬 Chat tư vấn</a>
-      <a th:href="@{/staff/orders}"
-         th:classappend="${activeMenu}=='orders' ? ' active' : ''">📦 Quản lý đơn hàng</a>
+
+      <details class="submenu"
+               th:open="${activeMenu}=='orders' or ${activeMenu}=='inventory'">
+        <summary th:classappend="${activeMenu}=='orders' or ${activeMenu}=='inventory' ? ' active' : ''">
+          📦 Quản lý đơn hàng
+        </summary>
+
+        <div class="submenu-items">
+          <a th:href="@{/staff/orders}"
+             th:classappend="${activeMenu}=='orders' ? ' active' : ''">🧾 Đơn hàng của khách</a>
+
+          <a th:href="@{/staff/inventory}"
+             th:classappend="${activeMenu}=='inventory' ? ' active' : ''">📚 Kho sách (giá &amp; tồn kho)</a>
+        </div>
+      </details>
     </nav>
   </aside>
 
   <main class="content">
     <div class="topbar">
-      <div class="title" th:text="${pageTitle} ?: 'Staff'">Staff</div>
+      <div class="topbar-left">
+        <button class="toggle-btn" id="toggleSidebarBtn" type="button">☰</button>
+        <div class="title" th:text="${pageTitle} ?: 'Staff'">Staff</div>
+      </div>
+
       <a th:href="@{/logout}">Đăng xuất</a>
     </div>
 
@@ -61,5 +135,28 @@
     </section>
   </main>
 </div>
+
+<script>
+  (function () {
+    const key = "staff_sidebar_collapsed";
+    const app = document.getElementById("staffApp");
+    const btn = document.getElementById("toggleSidebarBtn");
+
+    function apply(collapsed) {
+      if (!app) return;
+      app.classList.toggle("sidebar-collapsed", collapsed);
+    }
+
+    apply(localStorage.getItem(key) === "1");
+
+    if (btn) {
+      btn.addEventListener("click", function () {
+        const collapsed = !app.classList.contains("sidebar-collapsed");
+        apply(collapsed);
+        localStorage.setItem(key, collapsed ? "1" : "0");
+      });
+    }
+  })();
+</script>
 </body>
 </html>

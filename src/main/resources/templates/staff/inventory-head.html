@@ -1,0 +1,162 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="head">
+    <style>
+        .card {
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            padding:16px;
+
+            /* ✅ NEW */
+            display:flex;
+            flex-direction:column;
+            height: calc(100vh - 56px - 32px);
+            box-sizing: border-box;
+        }
+
+        .table-wrap {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+
+            margin-top: 8px;
+        }
+
+        table {
+            width:100%;
+            border-collapse:separate;
+            border-spacing:0;
+            min-width: 1200px;
+        }
+
+        th, td {
+            text-align:left;
+            padding:10px 10px;
+            border-bottom:1px solid #f1f5f9;
+            font-size:14px;
+            vertical-align:middle;
+        }
+
+        th {
+            font-size:13px;
+            color:#334155;
+            background:#f8fafc;
+            position:sticky;
+            top:0;
+        }
+        .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .input {
+            height:40px; padding:0 12px; border:1px solid #e5e7eb; border-radius:10px; min-width:260px;
+            outline:none;
+        }
+        .btn {
+            height:40px; padding:0 14px; border:1px solid #e5e7eb; background:#111827; color:#fff;
+            border-radius:10px; cursor:pointer;
+        }
+        .btn.secondary { background:#fff; color:#111827; }
+        .muted { color:#64748b; font-size:13px; }
+
+        .thumb {
+            width:42px; height:56px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb;
+            background:#f8fafc;
+        }
+        .loading { display:none; font-size:13px; color:#64748b; }
+        .loading.show { display:inline-block; }
+    </style>
+
+    <script>
+        // debounce: chống gọi API quá dày khi đang gõ
+        function debounce(fn, delay) {
+            let t = null;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        function escapeHtml(s) {
+            return (s ?? "").toString()
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function formatPrice(val) {
+            if (val === null || val === undefined || val === "") return "";
+            try { return new Intl.NumberFormat('vi-VN').format(Number(val)); }
+            catch (e) { return val; }
+        }
+
+        async function fetchBooks(keyword) {
+            const url = `/staff/inventory/search?q=${encodeURIComponent(keyword || "")}`;
+            const res = await fetch(url, { credentials: "same-origin" });
+            if (!res.ok) throw new Error("Fetch failed: " + res.status);
+            return await res.json();
+        }
+
+        function renderRows(books) {
+            const tbody = document.getElementById("booksTbody");
+            tbody.innerHTML = "";
+
+            if (!books || books.length === 0) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td colspan="8" class="muted">Không có kết quả.</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+
+            for (const b of books) {
+                const id = escapeHtml(b.id);
+                const name = escapeHtml(b.name);
+                const img = escapeHtml(b.imageUrl || "");
+                const category = escapeHtml(b.categoryName || "Unknown");
+                const author = escapeHtml(b.authorName || "Unknown");
+                const publisher = escapeHtml(b.publisherName || "Unknown");
+                const price = formatPrice(b.price);
+                const stock = (b.stock ?? "");
+
+                const lowStock = (b.stock !== null && b.stock !== undefined && Number(b.stock) <= 5);
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+          <td>${id}</td>
+          <td>
+            <img class="thumb" src="${img}" alt="" onerror="this.src=''; this.style.display='none';" />
+          </td>
+          <td>
+            <div style="font-weight:600;">${name}</div>
+          </td>
+          <td>${category}</td>
+          <td>${price}</td>
+          <td class="${lowStock ? 'stock-low' : ''}">${escapeHtml(stock)}</td>
+          <td>${author}</td>
+          <td>${publisher}</td>
+        `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const qInput = document.getElementById("qInput");
+            const totalEl = document.getElementById("totalCount");
+            const loadingEl = document.getElementById("loading");
+
+            const run = debounce(async () => {
+                const keyword = qInput.value.trim();
+                loadingEl.classList.add("show");
+                try {
+                    const data = await fetchBooks(keyword);
+                    totalEl.textContent = data.total ?? 0;
+                    renderRows(data.books ?? []);
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    loadingEl.classList.remove("show");
+                }
+            }, 250);
+
+            qInput.addEventListener("input", run);
+        });
+    </script>
+</th:block>
