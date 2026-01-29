@@ -2,7 +2,7 @@ package com.groupproject.ecommerce.controller;
 
 import com.groupproject.ecommerce.entity.*;
 import com.groupproject.ecommerce.enums.ProductStatus;
-import com.groupproject.ecommerce.repository.*;
+import com.groupproject.ecommerce.service.inter.*;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +19,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
-    private final PublisherRepository publisherRepository;
-    private final SupplierRepository supplierRepository;
-    private final AuthorRepository authorRepository;
+    private final ProductService productService;
+    private final CategoryService categoryService;
+    private final PublisherService publisherService;
+    private final SupplierService supplierService;
+    private final AuthorService authorService;
 
     private static final String REDIRECT_LOGIN = "redirect:/login";
     private static final String REDIRECT_ADMIN = "redirect:/admin";
@@ -43,9 +43,11 @@ public class AdminController {
     @GetMapping("/products/{id}")
     @ResponseBody
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
-        return productRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Product product = productService.getProductById(id);
+        if (product != null) {
+            return ResponseEntity.ok(product);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/products/save")
@@ -70,10 +72,8 @@ public class AdminController {
         }
 
         try {
-            Product product = findOrCreateProduct(productId);
-            updateProductFields(product, name, description, imageUrl, price, publishYear, stock, status);
-            setProductRelationships(product, categoryId, publisherId, supplierId, authorIds);
-            productRepository.save(product);
+            productService.saveProduct(productId, name, description, imageUrl, price, publishYear, 
+                                      stock, status, categoryId, publisherId, supplierId, authorIds);
 
             redirectAttributes.addFlashAttribute("message", 
                 productId != null ? "Cập nhật sách thành công!" : "Thêm sách mới thành công!");
@@ -91,10 +91,7 @@ public class AdminController {
         }
 
         try {
-            Product product = productRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-            
-            productRepository.delete(product);
+            productService.deleteProduct(id);
             redirectAttributes.addFlashAttribute("message", "Xóa sách thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa sách: " + e.getMessage());
@@ -110,47 +107,10 @@ public class AdminController {
 
     private void populateModelWithData(Model model, User user) {
         model.addAttribute("user", user);
-        model.addAttribute("products", productRepository.findAll());
-        model.addAttribute("categories", categoryRepository.findAll());
-        model.addAttribute("publishers", publisherRepository.findAll());
-        model.addAttribute("suppliers", supplierRepository.findAll());
-        model.addAttribute("authors", authorRepository.findAll());
-    }
-
-    private Product findOrCreateProduct(Long productId) {
-        if (productId != null) {
-            return productRepository.findById(productId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        }
-        return new Product();
-    }
-
-    private void updateProductFields(Product product, String name, String description, String imageUrl, 
-                                     BigDecimal price, Integer publishYear, Integer stock, ProductStatus status) {
-        product.setName(name);
-        product.setDescription(description);
-        product.setImageUrl(imageUrl);
-        product.setPrice(price);
-        product.setPublishYear(publishYear);
-        product.setStock(stock);
-        product.setStatus(status);
-    }
-
-    private void setProductRelationships(Product product, Long categoryId, Long publisherId, 
-                                         Long supplierId, List<Long> authorIds) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thể loại"));
-        product.setCategory(category);
-
-        Publisher publisher = publisherRepository.findById(publisherId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản"));
-        product.setPublisher(publisher);
-
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
-        product.setSupplier(supplier);
-
-        List<Author> authors = authorRepository.findAllById(authorIds);
-        product.setAuthors(authors);
+        model.addAttribute("products", productService.getAllProducts());
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("publishers", publisherService.getAllPublishers());
+        model.addAttribute("suppliers", supplierService.getAllSuppliers());
+        model.addAttribute("authors", authorService.getAllAuthors());
     }
 }

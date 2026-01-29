@@ -1,8 +1,9 @@
 package com.groupproject.ecommerce.controller;
 
+import com.groupproject.ecommerce.entity.Publisher;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.Role;
-import com.groupproject.ecommerce.service.inter.UserService;
+import com.groupproject.ecommerce.service.inter.PublisherService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -13,64 +14,62 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * Controller for Admin Staff Management
- * Provides CRUD operations for managing staff and customer users
+ * Controller for Admin Publisher Management
+ * Provides CRUD operations for managing publishers
  */
 @Controller
-@RequestMapping("/admin/staff")
+@RequestMapping("/admin/publishers")
 @RequiredArgsConstructor
-public class AdminStaffController {
+public class AdminPublisherController {
 
-    private final UserService userService;
+    private final PublisherService publisherService;
 
     // Constants
     private static final String REDIRECT_LOGIN = "redirect:/login";
-    private static final String REDIRECT_ADMIN_STAFF = "redirect:/admin/staff";
+    private static final String REDIRECT_ADMIN_PUBLISHERS = "redirect:/admin/publishers";
     private static final String LOGIN_USER_KEY = "LOGIN_USER";
 
     /**
-     * Display staff management page
+     * Display publisher management page
      */
     @GetMapping
-    public String showStaffManagement(HttpSession session, Model model) {
+    public String showPublisherManagement(HttpSession session, Model model) {
         User user = getAuthenticatedUser(session);
         if (user == null || user.getRole() != Role.ADMIN) {
             return REDIRECT_LOGIN;
         }
 
-        List<User> staffUsers = userService.getUsersByRole(Role.STAFF);
+        List<Publisher> publishers = publisherService.getAllPublishers();
         
-        model.addAttribute("users", staffUsers);
+        model.addAttribute("publishers", publishers);
         model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "Quản lý Nhân viên");
-        model.addAttribute("activeMenu", "staff");
+        model.addAttribute("pageTitle", "Quản lý Nhà xuất bản");
+        model.addAttribute("activeMenu", "publishers");
 
-        return "admin/staff";
+        return "admin/publishers";
     }
 
     /**
-     * Get user by ID (for editing)
+     * Get publisher by ID (for editing)
      */
     @GetMapping("/{id}")
     @ResponseBody
-    public User getUserById(@PathVariable Long id, HttpSession session) {
+    public Publisher getPublisherById(@PathVariable Long id, HttpSession session) {
         User admin = getAuthenticatedUser(session);
         if (admin == null || admin.getRole() != Role.ADMIN) {
             return null;
         }
 
-        return userService.getUserById(id);
+        return publisherService.getById(id);
     }
 
     /**
-     * Save user (create or update)
+     * Save publisher (create or update)
      */
     @PostMapping("/save")
-    public String saveUser(
-            @RequestParam(required = false) Long userId,
-            @RequestParam String email,
-            @RequestParam(required = false) String password,
-            @RequestParam String fullName,
+    public String savePublisher(
+            @RequestParam(required = false) Long publisherId,
+            @RequestParam String name,
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
@@ -80,29 +79,23 @@ public class AdminStaffController {
         }
 
         try {
-            // Check email uniqueness (except for current user)
-            if (userService.emailExists(email, userId)) {
-                redirectAttributes.addFlashAttribute("error", "Email đã tồn tại!");
-                return REDIRECT_ADMIN_STAFF;
-            }
+            publisherService.savePublisher(publisherId, name);
 
-            userService.saveUser(userId, email, password, fullName, Role.STAFF);
-
-            String message = userId == null ? "Thêm nhân viên thành công!" : "Cập nhật nhân viên thành công!";
+            String message = publisherId == null ? "Thêm nhà xuất bản thành công!" : "Cập nhật nhà xuất bản thành công!";
             redirectAttributes.addFlashAttribute("success", message);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_PUBLISHERS;
     }
 
     /**
-     * Delete user
+     * Delete publisher
      */
     @PostMapping("/delete/{id}")
-    public String deleteUser(
+    public String deletePublisher(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes redirectAttributes
@@ -113,20 +106,14 @@ public class AdminStaffController {
         }
 
         try {
-            // Prevent admin from deleting themselves
-            if (admin.getUserId().equals(id)) {
-                redirectAttributes.addFlashAttribute("error", "Không thể xóa tài khoản của chính bạn!");
-                return REDIRECT_ADMIN_STAFF;
-            }
-
-            userService.deleteUser(id);
-            redirectAttributes.addFlashAttribute("success", "Xóa nhân viên thành công!");
+            publisherService.deletePublisher(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa nhà xuất bản thành công!");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_PUBLISHERS;
     }
 
     // ==================== HELPER METHODS ====================

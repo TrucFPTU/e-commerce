@@ -1,8 +1,9 @@
 package com.groupproject.ecommerce.controller;
 
+import com.groupproject.ecommerce.entity.Category;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.Role;
-import com.groupproject.ecommerce.service.inter.UserService;
+import com.groupproject.ecommerce.service.inter.CategoryService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -13,64 +14,62 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * Controller for Admin Staff Management
- * Provides CRUD operations for managing staff and customer users
+ * Controller for Admin Category Management
+ * Provides CRUD operations for managing categories
  */
 @Controller
-@RequestMapping("/admin/staff")
+@RequestMapping("/admin/categories")
 @RequiredArgsConstructor
-public class AdminStaffController {
+public class AdminCategoryController {
 
-    private final UserService userService;
+    private final CategoryService categoryService;
 
     // Constants
     private static final String REDIRECT_LOGIN = "redirect:/login";
-    private static final String REDIRECT_ADMIN_STAFF = "redirect:/admin/staff";
+    private static final String REDIRECT_ADMIN_CATEGORIES = "redirect:/admin/categories";
     private static final String LOGIN_USER_KEY = "LOGIN_USER";
 
     /**
-     * Display staff management page
+     * Display category management page
      */
     @GetMapping
-    public String showStaffManagement(HttpSession session, Model model) {
+    public String showCategoryManagement(HttpSession session, Model model) {
         User user = getAuthenticatedUser(session);
         if (user == null || user.getRole() != Role.ADMIN) {
             return REDIRECT_LOGIN;
         }
 
-        List<User> staffUsers = userService.getUsersByRole(Role.STAFF);
+        List<Category> categories = categoryService.getAllCategories();
         
-        model.addAttribute("users", staffUsers);
+        model.addAttribute("categories", categories);
         model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "Quản lý Nhân viên");
-        model.addAttribute("activeMenu", "staff");
+        model.addAttribute("pageTitle", "Quản lý Thể loại");
+        model.addAttribute("activeMenu", "categories");
 
-        return "admin/staff";
+        return "admin/categories";
     }
 
     /**
-     * Get user by ID (for editing)
+     * Get category by ID (for editing)
      */
     @GetMapping("/{id}")
     @ResponseBody
-    public User getUserById(@PathVariable Long id, HttpSession session) {
+    public Category getCategoryById(@PathVariable Long id, HttpSession session) {
         User admin = getAuthenticatedUser(session);
         if (admin == null || admin.getRole() != Role.ADMIN) {
             return null;
         }
 
-        return userService.getUserById(id);
+        return categoryService.getCategoryById(id);
     }
 
     /**
-     * Save user (create or update)
+     * Save category (create or update)
      */
     @PostMapping("/save")
-    public String saveUser(
-            @RequestParam(required = false) Long userId,
-            @RequestParam String email,
-            @RequestParam(required = false) String password,
-            @RequestParam String fullName,
+    public String saveCategory(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam String name,
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
@@ -80,29 +79,23 @@ public class AdminStaffController {
         }
 
         try {
-            // Check email uniqueness (except for current user)
-            if (userService.emailExists(email, userId)) {
-                redirectAttributes.addFlashAttribute("error", "Email đã tồn tại!");
-                return REDIRECT_ADMIN_STAFF;
-            }
+            categoryService.saveCategory(categoryId, name);
 
-            userService.saveUser(userId, email, password, fullName, Role.STAFF);
-
-            String message = userId == null ? "Thêm nhân viên thành công!" : "Cập nhật nhân viên thành công!";
+            String message = categoryId == null ? "Thêm thể loại thành công!" : "Cập nhật thể loại thành công!";
             redirectAttributes.addFlashAttribute("success", message);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_CATEGORIES;
     }
 
     /**
-     * Delete user
+     * Delete category
      */
     @PostMapping("/delete/{id}")
-    public String deleteUser(
+    public String deleteCategory(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes redirectAttributes
@@ -113,20 +106,14 @@ public class AdminStaffController {
         }
 
         try {
-            // Prevent admin from deleting themselves
-            if (admin.getUserId().equals(id)) {
-                redirectAttributes.addFlashAttribute("error", "Không thể xóa tài khoản của chính bạn!");
-                return REDIRECT_ADMIN_STAFF;
-            }
-
-            userService.deleteUser(id);
-            redirectAttributes.addFlashAttribute("success", "Xóa nhân viên thành công!");
+            categoryService.deleteCategory(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa thể loại thành công!");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_CATEGORIES;
     }
 
     // ==================== HELPER METHODS ====================

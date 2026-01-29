@@ -1,8 +1,9 @@
 package com.groupproject.ecommerce.controller;
 
+import com.groupproject.ecommerce.entity.Supplier;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.Role;
-import com.groupproject.ecommerce.service.inter.UserService;
+import com.groupproject.ecommerce.service.inter.SupplierService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -13,64 +14,62 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * Controller for Admin Staff Management
- * Provides CRUD operations for managing staff and customer users
+ * Controller for Admin Supplier Management
+ * Provides CRUD operations for managing suppliers
  */
 @Controller
-@RequestMapping("/admin/staff")
+@RequestMapping("/admin/suppliers")
 @RequiredArgsConstructor
-public class AdminStaffController {
+public class AdminSupplierController {
 
-    private final UserService userService;
+    private final SupplierService supplierService;
 
     // Constants
     private static final String REDIRECT_LOGIN = "redirect:/login";
-    private static final String REDIRECT_ADMIN_STAFF = "redirect:/admin/staff";
+    private static final String REDIRECT_ADMIN_SUPPLIERS = "redirect:/admin/suppliers";
     private static final String LOGIN_USER_KEY = "LOGIN_USER";
 
     /**
-     * Display staff management page
+     * Display supplier management page
      */
     @GetMapping
-    public String showStaffManagement(HttpSession session, Model model) {
+    public String showSupplierManagement(HttpSession session, Model model) {
         User user = getAuthenticatedUser(session);
         if (user == null || user.getRole() != Role.ADMIN) {
             return REDIRECT_LOGIN;
         }
 
-        List<User> staffUsers = userService.getUsersByRole(Role.STAFF);
+        List<Supplier> suppliers = supplierService.getAllSuppliers();
         
-        model.addAttribute("users", staffUsers);
+        model.addAttribute("suppliers", suppliers);
         model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "Quản lý Nhân viên");
-        model.addAttribute("activeMenu", "staff");
+        model.addAttribute("pageTitle", "Quản lý Nhà cung cấp");
+        model.addAttribute("activeMenu", "suppliers");
 
-        return "admin/staff";
+        return "admin/suppliers";
     }
 
     /**
-     * Get user by ID (for editing)
+     * Get supplier by ID (for editing)
      */
     @GetMapping("/{id}")
     @ResponseBody
-    public User getUserById(@PathVariable Long id, HttpSession session) {
+    public Supplier getSupplierById(@PathVariable Long id, HttpSession session) {
         User admin = getAuthenticatedUser(session);
         if (admin == null || admin.getRole() != Role.ADMIN) {
             return null;
         }
 
-        return userService.getUserById(id);
+        return supplierService.getById(id);
     }
 
     /**
-     * Save user (create or update)
+     * Save supplier (create or update)
      */
     @PostMapping("/save")
-    public String saveUser(
-            @RequestParam(required = false) Long userId,
-            @RequestParam String email,
-            @RequestParam(required = false) String password,
-            @RequestParam String fullName,
+    public String saveSupplier(
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam String name,
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
@@ -80,29 +79,23 @@ public class AdminStaffController {
         }
 
         try {
-            // Check email uniqueness (except for current user)
-            if (userService.emailExists(email, userId)) {
-                redirectAttributes.addFlashAttribute("error", "Email đã tồn tại!");
-                return REDIRECT_ADMIN_STAFF;
-            }
+            supplierService.saveSupplier(supplierId, name);
 
-            userService.saveUser(userId, email, password, fullName, Role.STAFF);
-
-            String message = userId == null ? "Thêm nhân viên thành công!" : "Cập nhật nhân viên thành công!";
+            String message = supplierId == null ? "Thêm nhà cung cấp thành công!" : "Cập nhật nhà cung cấp thành công!";
             redirectAttributes.addFlashAttribute("success", message);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_SUPPLIERS;
     }
 
     /**
-     * Delete user
+     * Delete supplier
      */
     @PostMapping("/delete/{id}")
-    public String deleteUser(
+    public String deleteSupplier(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes redirectAttributes
@@ -113,20 +106,14 @@ public class AdminStaffController {
         }
 
         try {
-            // Prevent admin from deleting themselves
-            if (admin.getUserId().equals(id)) {
-                redirectAttributes.addFlashAttribute("error", "Không thể xóa tài khoản của chính bạn!");
-                return REDIRECT_ADMIN_STAFF;
-            }
-
-            userService.deleteUser(id);
-            redirectAttributes.addFlashAttribute("success", "Xóa nhân viên thành công!");
+            supplierService.deleteSupplier(id);
+            redirectAttributes.addFlashAttribute("success", "Xóa nhà cung cấp thành công!");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }
 
-        return REDIRECT_ADMIN_STAFF;
+        return REDIRECT_ADMIN_SUPPLIERS;
     }
 
     // ==================== HELPER METHODS ====================

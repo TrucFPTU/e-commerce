@@ -193,18 +193,39 @@
                 <span>Quản lý sách</span>
             </a>
             
+            <a th:href="@{/admin/categories}" 
+               class="menu-item"
+               th:classappend="${activeMenu}=='categories' ? ' active' : ''">
+                <span>📂</span>
+                <span>Quản lý thể loại</span>
+            </a>
+            
+            <a th:href="@{/admin/authors}" 
+               class="menu-item"
+               th:classappend="${activeMenu}=='authors' ? ' active' : ''">
+                <span>✍️</span>
+                <span>Quản lý tác giả</span>
+            </a>
+            
+            <a th:href="@{/admin/publishers}" 
+               class="menu-item"
+               th:classappend="${activeMenu}=='publishers' ? ' active' : ''">
+                <span>📖</span>
+                <span>Quản lý nhà xuất bản</span>
+            </a>
+            
+            <a th:href="@{/admin/suppliers}" 
+               class="menu-item"
+               th:classappend="${activeMenu}=='suppliers' ? ' active' : ''">
+                <span>🏢</span>
+                <span>Quản lý nhà cung cấp</span>
+            </a>
+            
             <a th:href="@{/admin/staff}" 
                class="menu-item"
                th:classappend="${activeMenu}=='staff' ? ' active' : ''">
                 <span>👥</span>
                 <span>Quản lý nhân viên</span>
-            </a>
-            
-            <a th:href="@{/admin/customers}" 
-               class="menu-item"
-               th:classappend="${activeMenu}=='customers' ? ' active' : ''">
-                <span>👤</span>
-                <span>Quản lý khách hàng</span>
             </a>
         </nav>
     </aside>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:replace="~{admin/layout :: layout(
+    pageTitle=${pageTitle},
+    activeMenu=${activeMenu},
+    pageHead=~{admin/authors-head :: head},
+    pageBody=~{admin/authors-body :: body},
+    user=${user}
+)}">
+</th:block>
+
+</html>

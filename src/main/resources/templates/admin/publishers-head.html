@@ -52,8 +52,8 @@
         .btn-danger:hover { background: #c82333; }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-        /* Customer Table Section */
-        .customer-section {
+        /* Publishers Table Section */
+        .publishers-section {
             background: #fff;
             padding: 20px;
             border-radius: 8px;
@@ -200,19 +200,12 @@
             padding-top: 20px;
             border-top: 1px solid #dee2e6;
         }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 15px;
-        }
     </style>
 
     <script>
-        const AdminCustomer = {
+        const AdminPublisher = {
             /**
-             * Initialize customer management
+             * Initialize publisher management
              */
             init() {
                 this.initSearch();
@@ -227,7 +220,7 @@
                 if (!searchInput) return;
 
                 searchInput.addEventListener('input', (e) => {
-                    AppUtils.searchTable(e.target.value, '#customerTable', () => this.updateCount());
+                    AppUtils.searchTable(e.target.value, '#publishersTable', () => this.updateCount());
                 });
             },
 
@@ -235,7 +228,7 @@
              * Initialize modal
              */
             initModal() {
-                const modal = document.getElementById('customerModal');
+                const modal = document.getElementById('publisherModal');
                 
                 // Close modal when clicking outside
                 window.addEventListener('click', (e) => {
@@ -246,58 +239,46 @@
             },
 
             /**
-             * Open modal for adding new user
+             * Open modal for adding new publisher
              */
             openAddModal() {
-                const form = document.getElementById('customerForm');
+                const form = document.getElementById('publisherForm');
                 const modalTitle = document.getElementById('modalTitle');
-                const passwordGroup = document.getElementById('passwordGroup');
                 
                 form.reset();
-                form.userId.value = '';
-                modalTitle.textContent = 'Thêm Khách hàng Mới';
+                form.publisherId.value = '';
+                modalTitle.textContent = 'Thêm Nhà xuất bản Mới';
                 
-                // Password is required for new user
-                passwordGroup.querySelector('input').required = true;
-                passwordGroup.querySelector('label').innerHTML = 'Mật khẩu <span style="color:red">*</span>';
-                
-                document.getElementById('customerModal').style.display = 'block';
+                document.getElementById('publisherModal').style.display = 'block';
             },
 
             /**
-             * Open modal for editing user
+             * Open modal for editing publisher
              */
-            async openEditModal(userId) {
-                const form = document.getElementById('customerForm');
+            async openEditModal(publisherId) {
+                const form = document.getElementById('publisherForm');
                 const modalTitle = document.getElementById('modalTitle');
-                const passwordGroup = document.getElementById('passwordGroup');
 
                 try {
-                    const response = await fetch(`/admin/customers/${userId}`);
-                    const user = await response.json();
+                    const response = await fetch(`/admin/publishers/${publisherId}`);
+                    const publisher = await response.json();
 
-                    if (!user) {
-                        AppUtils.showAlert('Không tìm thấy khách hàng!', 'error');
+                    if (!publisher) {
+                        AppUtils.showAlert('Không tìm thấy nhà xuất bản!', 'error');
                         return;
                     }
 
                     // Populate form
-                    form.userId.value = user.userId;
-                    form.email.value = user.email;
-                    form.fullName.value = user.fullName;
-                    form.password.value = '';
+                    form.publisherId.value = publisher.publisherId;
+                    form.name.value = publisher.name;
 
-                    modalTitle.textContent = 'Chỉnh sửa Khách hàng';
-                    
-                    // Password is optional for edit
-                    passwordGroup.querySelector('input').required = false;
-                    passwordGroup.querySelector('label').textContent = 'Mật khẩu mới (để trống nếu không đổi)';
+                    modalTitle.textContent = 'Chỉnh sửa Nhà xuất bản';
 
-                    document.getElementById('customerModal').style.display = 'block';
+                    document.getElementById('publisherModal').style.display = 'block';
 
                 } catch (error) {
-                    console.error('Error loading user:', error);
-                    AppUtils.showAlert('Lỗi khi tải thông tin khách hàng!', 'error');
+                    console.error('Error loading publisher:', error);
+                    AppUtils.showAlert('Lỗi khi tải thông tin nhà xuất bản!', 'error');
                 }
             },
 
@@ -305,16 +286,16 @@
              * Close modal
              */
             closeModal() {
-                document.getElementById('customerModal').style.display = 'none';
-                document.getElementById('customerForm').reset();
+                document.getElementById('publisherModal').style.display = 'none';
+                document.getElementById('publisherForm').reset();
             },
 
             /**
-             * Delete user with confirmation
+             * Delete publisher with confirmation
              */
-            deleteUser(userId, fullName) {
-                if (AppUtils.confirm(`Bạn có chắc muốn xóa khách hàng "${fullName}"?`)) {
-                    document.getElementById('deleteForm_' + userId).submit();
+            deletePublisher(publisherId, name) {
+                if (AppUtils.confirm(`Bạn có chắc muốn xóa nhà xuất bản "${name}"?`)) {
+                    document.getElementById('deleteForm_' + publisherId).submit();
                 }
             },
 
@@ -322,13 +303,13 @@
              * Update count of visible rows
              */
             updateCount() {
-                const table = document.getElementById('customerTable');
+                const table = document.getElementById('publishersTable');
                 const rows = table?.querySelectorAll('tbody tr');
                 const visibleRows = Array.from(rows || []).filter(row => 
                     row.style.display !== 'none'
                 );
                 
-                const countElement = document.getElementById('customerCount');
+                const countElement = document.getElementById('publisherCount');
                 if (countElement) {
                     countElement.textContent = visibleRows.length;
                 }
@@ -336,7 +317,7 @@
         };
 
         // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => AdminCustomer.init());
+        document.addEventListener('DOMContentLoaded', () => AdminPublisher.init());
     </script>
 </th:block>
 
