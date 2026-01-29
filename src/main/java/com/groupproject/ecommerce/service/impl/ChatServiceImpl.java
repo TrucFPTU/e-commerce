@@ -23,9 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +38,7 @@ public class ChatServiceImpl implements ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final AttachmentRepo attachmentRepo;
     private final ConversationRepo conversationRepository;
+    private final MinioService minioService;
 
 
 
@@ -236,15 +235,12 @@ public class ChatServiceImpl implements ChatService {
         int dot = original.lastIndexOf('.');
         if (dot >= 0 && dot < original.length() - 1) ext = original.substring(dot);
 
-        String storedName = UUID.randomUUID() + ext;
+        String storedName = "chat/" + UUID.randomUUID() + ext;
 
-        Path dir = Paths.get(System.getProperty("user.dir"), "uploads", "chat");
         try {
-            Files.createDirectories(dir);
-            Path target = dir.resolve(storedName);
-            file.transferTo(target.toFile());
+            minioService.uploadFile(storedName, file);
         } catch (Exception e) {
-            throw new RuntimeException("Cannot save file", e);
+            throw new RuntimeException("Cannot save file to MinIO", e);
         }
 
         Attachment at = new Attachment();

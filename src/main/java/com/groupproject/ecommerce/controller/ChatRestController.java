@@ -11,7 +11,7 @@ import com.groupproject.ecommerce.repository.ConversationRepo;
 import com.groupproject.ecommerce.service.inter.ChatService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.groupproject.ecommerce.service.impl.MinioService;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +34,7 @@ public class ChatRestController {
     private final ChatService chatService;
     private final ConversationRepo conversationRepo;
     private final AttachmentRepo attachmentRepo;
+    private final MinioService minioService;
 
     @GetMapping("/bootstrap")
     public ChatBootstrapResponse bootstrap(HttpSession session,
@@ -102,7 +103,7 @@ public class ChatRestController {
     }
 
     @GetMapping("/file/{id}")
-    public ResponseEntity<Resource> downloadChatFile(HttpSession session, @PathVariable Long id) {
+    public ResponseEntity<InputStreamResource> downloadChatFile(HttpSession session, @PathVariable Long id) {
         User u = (User) session.getAttribute("LOGIN_USER");
         if (u == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
 
@@ -118,17 +119,18 @@ public class ChatRestController {
 
         if (!allowed) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden");
 
-        Path filePath = Paths.get(System.getProperty("user.dir"), "uploads", "chat", at.getStoredName());
+        try {
+            InputStream inputStream = minioService.getFile(at.getStoredName());
+            InputStreamResource resource = new InputStreamResource(inputStream);
 
-        if (!Files.exists(filePath)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File missing");
-
-        Resource res = new org.springframework.core.io.FileSystemResource(filePath);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(at.getMimeType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + at.getOriginalName().replace("\"", "") + "\"")
-                .body(res);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(at.getMimeType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + at.getOriginalName().replace("\"", "") + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found in storage");
+        }
     }
 
 
