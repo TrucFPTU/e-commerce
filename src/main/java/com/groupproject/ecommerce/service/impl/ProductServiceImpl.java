@@ -172,17 +172,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Product saveProduct(Long productId, String name, String description, String imageUrl,
-                              BigDecimal price, Integer publishYear, Integer stock, ProductStatus status,
-                              Long categoryId, Long publisherId, Long supplierId, List<Long> authorIds) {
+                               BigDecimal price, Integer publishYear, Integer stock, ProductStatus status,
+                               Long categoryId, Long publisherId, Long supplierId, List<Long> authorIds) {
         Product product;
-        
+
         if (productId != null) {
             product = productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
         } else {
             product = new Product();
         }
-        
+
         // Update basic fields
         product.setName(name);
         product.setDescription(description);
@@ -191,23 +191,23 @@ public class ProductServiceImpl implements ProductService {
         product.setPublishYear(publishYear);
         product.setStock(stock);
         product.setStatus(status);
-        
+
         // Set relationships
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thể loại"));
         product.setCategory(category);
-        
+
         Publisher publisher = publisherRepository.findById(publisherId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản"));
         product.setPublisher(publisher);
-        
+
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
         product.setSupplier(supplier);
-        
+
         List<Author> authors = authorRepository.findAllById(authorIds);
         product.setAuthors(authors);
-        
+
         return productRepository.save(product);
     }
 

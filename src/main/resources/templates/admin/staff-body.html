@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="body">
+  <!-- Search Section -->
+  <div class="search-section">
+    <p>Gõ là ra kết quả ngay. Tìm kiếm theo: tên, email nhân viên.</p>
+    <div class="search-controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="Nhập từ khóa để tìm nhân viên...">
+      <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; AdminStaff.initSearch(); AdminStaff.updateCount();">Xóa lọc</button>
+      <button class="btn btn-success" onclick="AdminStaff.openAddModal()">+ Thêm nhân viên mới</button>
+    </div>
+  </div>
+
+  <!-- Staff Table -->
+  <div class="staff-section">
+    <div class="section-header">
+      <h2>Danh sách nhân viên</h2>
+      <span class="total-count">Tổng: <strong id="staffCount" th:text="${#lists.size(users)}">0</strong> người dùng</span>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="staffTable">
+        <thead>
+        <tr>
+          <th style="width: 60px">ID</th>
+          <th>Email</th>
+          <th>Họ tên</th>
+          <th style="width: 160px; text-align: center">Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${users}" th:data-search="${u.userId + ' ' + u.email + ' ' + u.fullName}">
+          <td th:text="${u.userId}">1</td>
+          <td th:text="${u.email}">staff@example.com</td>
+          <td th:text="${u.fullName}">Nguyễn Văn A</td>
+          <td style="text-align: center">
+            <div class="action-buttons" style="justify-content: center">
+              <button class="btn btn-primary btn-sm"
+                      th:data-id="${u.userId}"
+                      onclick="AdminStaff.openEditModal(this.dataset.id)"
+                      title="Chỉnh sửa">
+                ✏️ Sửa
+              </button>
+              <button class="btn btn-danger btn-sm"
+                      th:data-id="${u.userId}"
+                      th:data-name="${u.fullName}"
+                      onclick="AdminStaff.deleteUser(this.dataset.id, this.dataset.name)"
+                      title="Xóa">
+                🗑️ Xóa
+              </button>
+            </div>
+
+            <!-- Hidden delete form -->
+            <form th:id="'deleteForm_' + ${u.userId}"
+                  th:action="@{/admin/staff/delete/{id}(id=${u.userId})}"
+                  method="post"
+                  style="display:none">
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="staffModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Thêm Nhân viên Mới</h2>
+        <button type="button" class="close-btn" onclick="AdminStaff.closeModal()">&times;</button>
+      </div>
+
+      <form id="staffForm" th:action="@{/admin/staff/save}" method="post">
+        <input type="hidden" id="userId" name="userId">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email <span style="color:red">*</span></label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   required
+                   placeholder="Nhập email">
+          </div>
+
+          <div class="form-group">
+            <label for="fullName">Họ tên <span style="color:red">*</span></label>
+            <input type="text"
+                   id="fullName"
+                   name="fullName"
+                   required
+                   placeholder="Nhập họ tên">
+          </div>
+        </div>
+
+        <div class="form-group" id="passwordGroup">
+          <label for="password">Mật khẩu <span style="color:red">*</span></label>
+          <input type="password"
+                 id="password"
+                 name="password"
+                 placeholder="Nhập mật khẩu"
+                 minlength="6">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="AdminStaff.closeModal()">
+            Hủy
+          </button>
+          <button type="submit" class="btn btn-primary">
+            💾 Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</th:block>
+
+</html>

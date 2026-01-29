@@ -11,7 +11,7 @@ import java.util.List;
  * Service interface for Product management
  */
 public interface ProductService {
-    
+
     // Customer-facing methods
     List<BookCardRes> getHomeBooks();
     BookCardRes getBookCardById(Long id);
@@ -21,12 +21,12 @@ public interface ProductService {
     List<BookCardRes> getBooksBySupplier(Long supplierId);
     List<BookCardRes> searchHomeBooks(String keyword);
     String getProductsForPrompt(int limit);
-    
+
     // Admin CRUD methods
     List<Product> getAllProducts();
     Product getProductById(Long id);
     Product saveProduct(Long productId, String name, String description, String imageUrl,
-                       BigDecimal price, Integer publishYear, Integer stock, ProductStatus status,
-                       Long categoryId, Long publisherId, Long supplierId, List<Long> authorIds);
+                        BigDecimal price, Integer publishYear, Integer stock, ProductStatus status,
+                        Long categoryId, Long publisherId, Long supplierId, List<Long> authorIds);
     void deleteProduct(Long id);
 }
