@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="head">
+    <style>
+        /* Search Section */
+        .search-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-section p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: #007bff; color: #fff; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: #fff; }
+        .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; color: #fff; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* Suppliers Table Section */
+        .suppliers-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .total-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+            color: #555;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+
+    <script>
+        const AdminSupplier = {
+            /**
+             * Initialize supplier management
+             */
+            init() {
+                this.initSearch();
+                this.initModal();
+            },
+
+            /**
+             * Initialize search functionality using AppUtils
+             */
+            initSearch() {
+                const searchInput = document.getElementById('searchInput');
+                if (!searchInput) return;
+
+                searchInput.addEventListener('input', (e) => {
+                    AppUtils.searchTable(e.target.value, '#suppliersTable', () => this.updateCount());
+                });
+            },
+
+            /**
+             * Initialize modal
+             */
+            initModal() {
+                const modal = document.getElementById('supplierModal');
+                
+                // Close modal when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.closeModal();
+                    }
+                });
+            },
+
+            /**
+             * Open modal for adding new supplier
+             */
+            openAddModal() {
+                const form = document.getElementById('supplierForm');
+                const modalTitle = document.getElementById('modalTitle');
+                
+                form.reset();
+                form.supplierId.value = '';
+                modalTitle.textContent = 'Thêm Nhà cung cấp Mới';
+                
+                document.getElementById('supplierModal').style.display = 'block';
+            },
+
+            /**
+             * Open modal for editing supplier
+             */
+            async openEditModal(supplierId) {
+                const form = document.getElementById('supplierForm');
+                const modalTitle = document.getElementById('modalTitle');
+
+                try {
+                    const response = await fetch(`/admin/suppliers/${supplierId}`);
+                    const supplier = await response.json();
+
+                    if (!supplier) {
+                        AppUtils.showAlert('Không tìm thấy nhà cung cấp!', 'error');
+                        return;
+                    }
+
+                    // Populate form
+                    form.supplierId.value = supplier.supplierId;
+                    form.name.value = supplier.name;
+
+                    modalTitle.textContent = 'Chỉnh sửa Nhà cung cấp';
+
+                    document.getElementById('supplierModal').style.display = 'block';
+
+                } catch (error) {
+                    console.error('Error loading supplier:', error);
+                    AppUtils.showAlert('Lỗi khi tải thông tin nhà cung cấp!', 'error');
+                }
+            },
+
+            /**
+             * Close modal
+             */
+            closeModal() {
+                document.getElementById('supplierModal').style.display = 'none';
+                document.getElementById('supplierForm').reset();
+            },
+
+            /**
+             * Delete supplier with confirmation
+             */
+            deleteSupplier(supplierId, name) {
+                if (AppUtils.confirm(`Bạn có chắc muốn xóa nhà cung cấp "${name}"?`)) {
+                    document.getElementById('deleteForm_' + supplierId).submit();
+                }
+            },
+
+            /**
+             * Update count of visible rows
+             */
+            updateCount() {
+                const table = document.getElementById('suppliersTable');
+                const rows = table?.querySelectorAll('tbody tr');
+                const visibleRows = Array.from(rows || []).filter(row => 
+                    row.style.display !== 'none'
+                );
+                
+                const countElement = document.getElementById('supplierCount');
+                if (countElement) {
+                    countElement.textContent = visibleRows.length;
+                }
+            }
+        };
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => AdminSupplier.init());
+    </script>
+</th:block>
+
+</html>
