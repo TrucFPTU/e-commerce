@@ -16,13 +16,7 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
-    List<Product> findAll();
-
-    @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
     List<Product> findByStatus(ProductStatus status);
-
-    @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
-    Optional<Product> findById(Long id);
 
 
     @EntityGraph(attributePaths = {"publisher", "authors", "category"})
