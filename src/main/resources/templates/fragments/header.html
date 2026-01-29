@@ -218,12 +218,13 @@
                             <span class="user-name" th:text="${user.fullName}">User</span>
                         </a>
                         <a class="cart-link" th:href="@{/cart}" title="Giỏ hàng">
-                            🛒 <span>Cart</span>
+                            🛒 <span>Giỏ hàng</span>
                             <span class="cart-badge"
                                   th:if="${cartCount != null and cartCount > 0}"
                                   th:text="${cartCount}">0</span>
 
                         </a>
+                        <a href="/orders" title="Lịch sử đơn hàng">📦 Đơn hàng</a>
                         <a href="/logout">Logout</a>
                     </div>
                     <div th:unless="${user}">
