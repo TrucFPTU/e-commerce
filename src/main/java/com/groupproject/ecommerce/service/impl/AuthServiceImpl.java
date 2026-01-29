@@ -17,17 +17,27 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-//    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User login(String email, String rawPassword) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("email Người dùng không tồn tại hoặc chưa đăng ký"));
-//        if (!passwordEncoder.matches(rawPassword, user.getPassWord())) {
-//            throw new RuntimeException("Mật khẩu không đúng");
-//        }
-        if(!rawPassword.equals(user.getPassWord())){
-            throw new RuntimeException("Mật khẩu không đúng");
+        
+        String storedPassword = user.getPassWord();
+        
+        // Check if password is BCrypt encoded (starts with $2a$, $2b$, or $2y$)
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+            // Use BCrypt comparison for encoded passwords
+            if (!passwordEncoder.matches(rawPassword, storedPassword)) {
+                throw new RuntimeException("Mật khẩu không đúng");
+            }
+        } else {
+            // Use plain text comparison for non-encoded passwords (legacy data)
+            if (!rawPassword.equals(storedPassword)) {
+                throw new RuntimeException("Mật khẩu không đúng");
+            }
         }
+        
         return user;
     }
 
