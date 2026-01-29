@@ -105,6 +105,8 @@ public class ProductServiceImpl implements ProductService {
 
         Long supplierId = (p.getSupplier() != null) ? p.getSupplier().getSupplierId() : null;
         String supplierName = (p.getSupplier() != null) ? p.getSupplier().getName() : "Unknown";
+        Long categoryId = (p.getCategory() != null) ? p.getCategory().getCategoryId() : null;
+        String categoryName = (p.getCategory() != null) ? p.getCategory().getName() : "Unknown";
 
         return BookCardRes.builder()
                 .id(p.getProductId())
@@ -120,6 +122,8 @@ public class ProductServiceImpl implements ProductService {
                 .supplierId(supplierId)
                 .supplierName(supplierName)
                 .description(p.getDescription())
+                .categoryId(categoryId)
+                .categoryName(categoryName)
                 .build();
     }
 

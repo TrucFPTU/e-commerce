@@ -15,8 +15,9 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    @EntityGraph(attributePaths = {"publisher", "authors"})
+    @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
     List<Product> findByStatus(ProductStatus status);
+
 
     @EntityGraph(attributePaths = {"publisher", "authors", "category"})
     Optional<Product> findByProductIdAndStatus(Long id, ProductStatus status);
@@ -66,20 +67,24 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"publisher", "supplier", "authors", "category"})
     @Query("""
-    select distinct p
-    from Product p
-    left join p.authors a
-    where p.status = com.groupproject.ecommerce.enums.ProductStatus.ACTIVE
-      and (
-           lower(p.name) like lower(concat('%', :kw, '%'))
-        or lower(p.description) like lower(concat('%', :kw, '%'))
-        or lower(p.publisher.name) like lower(concat('%', :kw, '%'))
-        or lower(p.supplier.name) like lower(concat('%', :kw, '%'))
-        or lower(a.name) like lower(concat('%', :kw, '%'))
-      )
-    order by p.productId desc
+select distinct p
+from Product p
+left join p.authors a
+where p.status = com.groupproject.ecommerce.enums.ProductStatus.ACTIVE
+  and (
+       lower(p.name) like lower(concat('%', :kw, '%'))
+    or lower(p.description) like lower(concat('%', :kw, '%'))
+    or lower(p.publisher.name) like lower(concat('%', :kw, '%'))
+    or lower(p.supplier.name) like lower(concat('%', :kw, '%'))
+    or lower(a.name) like lower(concat('%', :kw, '%'))
+    or lower(p.category.name) like lower(concat('%', :kw, '%'))
+  )
+order by p.productId desc
 """)
     List<Product> searchActive(@Param("kw") String keyword);
+
+
+
 
 
 }

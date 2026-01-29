@@ -1,0 +1,67 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+    <div class="card">
+        <div class="row" style="justify-content:space-between;">
+            <div>
+                <div style="font-weight:700; font-size:16px;">Kho sách (giá &amp; số lượng tồn kho)</div>
+                <div class="muted">Gõ là ra kết quả ngay. Search theo: tên, mô tả, tác giả, nhà xuất bản, nhà cung cấp, <b>thể loại</b>.</div>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+            <input id="qInput" class="input" type="text" name="q"
+                   placeholder="Nhập từ khóa để tìm sách..." th:value="${q}">
+            <a class="btn secondary" th:href="@{/staff/inventory}" style="text-decoration:none; display:inline-flex; align-items:center;">
+                Xóa lọc
+            </a>
+
+            <span id="loading" class="loading">Đang tìm...</span>
+
+            <div class="muted" style="margin-left:auto;">
+                Tổng: <b id="totalCount" th:text="${total}">0</b> cuốn
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:90px;">Mã</th>
+                    <th style="width:70px;">Ảnh</th>
+                    <th>Tên sách</th>
+                    <th style="width:180px;">Thể loại</th>
+                    <th style="width:140px;">Giá</th>
+                    <th style="width:120px;">Tồn kho</th>
+                    <th style="width:220px;">Tác giả</th>
+                    <th style="width:220px;">Nhà xuất bản</th>
+                </tr>
+                </thead>
+
+                <tbody id="booksTbody">
+                <tr th:if="${books == null || #lists.isEmpty(books)}">
+                    <td colspan="8" class="muted">Không có kết quả.</td>
+                </tr>
+
+                <tr th:each="b : ${books}">
+                    <td th:text="${b.id}">1</td>
+                    <td>
+                        <img class="thumb" th:if="${b.imageUrl != null}" th:src="${b.imageUrl}" alt=""
+                             onerror="this.style.display='none';" />
+                    </td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${b.name}">Book name</div>
+                        <div class="muted" th:if="${b.publishYear != null}">
+                            Năm xuất bản: <span th:text="${b.publishYear}">2024</span>
+                        </div>
+                    </td>
+                    <td th:text="${b.categoryName}">Category</td>
+                    <td th:text="${#numbers.formatDecimal(b.price, 0, 'COMMA', 2, 'POINT')}">0</td>
+                    <td th:classappend="${b.stock != null and b.stock <= 5} ? ' stock-low' : ''"
+                        th:text="${b.stock}">0</td>
+                    <td th:text="${b.authorName}">Author</td>
+                    <td th:text="${b.publisherName}">Publisher</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
