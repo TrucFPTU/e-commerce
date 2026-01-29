@@ -27,7 +27,95 @@
         .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
         a { text-decoration: none; color: #007bff; }
         a:hover { text-decoration: underline; }
-
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .modal-body {
+            padding: 30px;
+        }
+        .payment-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .payment-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .payment-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .payment-option-content {
+            flex: 1;
+        }
+        .payment-option-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        .payment-option-desc {
+            color: #666;
+            font-size: 13px;
+        }
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-modal {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -51,6 +139,9 @@
         <table class="cart-table">
             <thead>
             <tr>
+                <th style="width: 50px; text-align: center;">
+                    <input type="checkbox" id="selectAll" onchange="toggleAll(this)" />
+                </th>
                 <th>Sản phẩm</th>
                 <th>Đơn giá</th>
                 <th>Số lượng</th>
@@ -60,6 +151,12 @@
             </thead>
             <tbody>
             <tr th:each="item : ${cartItems}">
+                <td style="text-align: center;">
+                    <input type="checkbox" class="item-checkbox" 
+                           th:value="${item.cartItemId}"
+                           th:attr="data-price=${item.unitPriceSnapshot}, data-quantity=${item.quantity}"
+                           onchange="updateTotal()" />
+                </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <img th:src="${item.product.imageUrl}" th:alt="${item.product.name}" onerror="this.src='https://via.placeholder.com/80'"/>
@@ -89,19 +186,155 @@
         </table>
 
         <div class="cart-summary">
-            <div>Tổng số lượng: <strong th:text="${cartItems.size()} + ' sản phẩm'"></strong></div>
+            <div>Sản phẩm đã chọn: <strong id="selectedCount">0</strong> / <span th:text="${cartItems.size()}"></span></div>
             <div class="total-row">
-                Tổng tiền: <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                Tổng tiền: <span id="displayTotal">0đ</span>
             </div>
         </div>
+
+        <form id="checkoutForm" th:action="@{/cart/checkout}" method="post" style="margin-top: 30px;">
+            <input type="hidden" name="paymentMethod" id="paymentMethod" value=""/>
+            <input type="hidden" name="selectedItems" id="selectedItems" value=""/>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Thông tin giao hàng</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Số điện thoại:</label>
+                    <input type="tel" name="phone" required pattern="[0-9]{10,11}" placeholder="Nhập số điện thoại" 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" />
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Địa chỉ giao hàng:</label>
+                    <textarea name="address" required rows="3" placeholder="Nhập địa chỉ đầy đủ" 
+                              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+            </div>
+        </form>
 
         <div class="actions">
             <form th:action="@{/cart/clear}" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa toàn bộ giỏ hàng?');">
                 <button type="submit" class="btn btn-danger">🗑️ Xóa giỏ hàng</button>
-            </form><a href="/homepage" class="btn btn-primary">← Tiếp tục mua hàng</a>
-            <button class="btn btn-success">Thanh toán →</button>
+            </form>
+            <a href="/homepage" class="btn btn-primary">← Tiếp tục mua hàng</a>
+            <button type="button" class="btn btn-success" onclick="showPaymentModal()">Thanh toán →</button>
+        </div>
+    </div>
+    
+    <!-- Payment Method Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Chọn phương thức thanh toán</h2>
+            </div>
+            <div class="modal-body">
+                <label class="payment-option">
+                    <input type="radio" name="paymentMethodRadio" value="CASH" checked>
+                    <div class="payment-option-content">
+                        <div class="payment-option-title">💵 Thanh toán khi nhận hàng (COD)</div>
+                        <div class="payment-option-desc">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                    </div>
+                </label>
+                
+                <label class="payment-option">
+                    <input type="radio" name="paymentMethodRadio" value="VNPAY">
+                    <div class="payment-option-content">
+                        <div class="payment-option-title">🏦 Thanh toán qua VNPay</div>
+                        <div class="payment-option-desc">Thanh toán online qua ví VNPay hoặc thẻ ngân hàng</div>
+                    </div>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal btn-cancel" onclick="closePaymentModal()">Hủy</button>
+                <button type="button" class="btn-modal btn-confirm" onclick="confirmPayment()">Xác nhận</button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Tính tổng tiền dựa trên các checkbox được chọn
+    function updateTotal() {
+        const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+        let total = 0;
+        let count = 0;
+        
+        checkboxes.forEach(checkbox => {
+            const price = parseFloat(checkbox.dataset.price);
+            const quantity = parseInt(checkbox.dataset.quantity);
+            total += price * quantity;
+            count++;
+        });
+        
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('displayTotal').textContent = formatNumber(total) + 'đ';
+        
+        // Cập nhật trạng thái checkbox "Chọn tất cả"
+        const selectAll = document.getElementById('selectAll');
+        const allCheckboxes = document.querySelectorAll('.item-checkbox');
+        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    }
+    
+    function formatNumber(num) {
+        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+        updateTotal();
+    }
+    
+    function showPaymentModal() {
+        // Kiểm tra có sản phẩm nào được chọn không
+        const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+            return;
+        }
+        
+        // Validate form
+        const form = document.getElementById('checkoutForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        document.getElementById('paymentModal').style.display = 'block';
+    }
+    
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+    }
+    
+    function confirmPayment() {
+        const selected = document.querySelector('input[name="paymentMethodRadio"]:checked');
+        if (selected) {
+            // Lấy danh sách cartItemId được chọn
+            const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            
+            // Đặt giá trị vào hidden input
+            document.getElementById('selectedItems').value = selectedIds.join(',');
+            document.getElementById('paymentMethod').value = selected.value;
+            
+            // Submit form
+            document.getElementById('checkoutForm').submit();
+        }
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('paymentModal');
+        if (event.target == modal) {
+            closePaymentModal();
+        }
+    }
+    
+    // Khởi tạo tính tổng khi tải trang
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTotal();
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết Quả Thanh Toán</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .result-header {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .result-header.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .result-header.failed {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .result-header.error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .icon-wrapper {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .icon {
+            font-size: 50px;
+            font-weight: bold;
+        }
+        
+        .success .icon {
+            color: #43e97b;
+        }
+        
+        .failed .icon {
+            color: #fa709a;
+        }
+        
+        .error .icon {
+            color: #f5576c;
+        }
+        
+        .result-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .result-message {
+            color: white;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        
+        .result-body {
+            padding: 30px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-row:last-of-type {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+        }
+        
+        .amount {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 480px) {
+            .result-title {
+                font-size: 24px;
+            }
+            
+            .result-body {
+                padding: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .amount {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="result-card">
+        <div class="result-header" th:classappend="${status}">
+            <div class="icon-wrapper">
+                <span class="icon" th:text="${status == 'success' ? '✓' : (status == 'failed' ? '✕' : '!')}"></span>
+            </div>
+            <h1 class="result-title" th:text="${status == 'success' ? 'Thanh Toán Thành Công!' : (status == 'failed' ? 'Thanh Toán Thất Bại' : 'Có Lỗi Xảy Ra')}"></h1>
+            <p class="result-message" th:text="${message}"></p>
+        </div>
+
+        <div class="result-body">
+            <div class="info-row" th:if="${orderCode != null}">
+                <span class="info-label">Mã đơn hàng:</span>
+                <span class="info-value" th:text="${orderCode}"></span>
+            </div>
+            <div class="info-row" th:if="${txnRef != null}">
+                <span class="info-label">Mã giao dịch:</span>
+                <span class="info-value" th:text="${txnRef}"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Số tiền:</span>
+                <span class="info-value amount" th:text="${#numbers.formatDecimal(amount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+            </div>
+            <div class="info-row" th:if="${paymentMethod != null}">
+                <span class="info-label">Phương thức:</span>
+                <span class="info-value" th:text="${paymentMethod}"></span>
+            </div>
+            <div class="info-row" th:if="${bankCode != null}">
+                <span class="info-label">Ngân hàng:</span>
+                <span class="info-value" th:text="${bankCode}"></span>
+            </div>
+            <div class="info-row" th:if="${transactionNo != null}">
+                <span class="info-label">Mã giao dịch ngân hàng:</span>
+                <span class="info-value" th:text="${transactionNo}"></span>
+            </div>
+
+            <div class="btn-group">
+                <a href="/" class="btn btn-primary">Về Trang Chủ</a>
+                <a th:if="${status == 'success'}" href="/orders" class="btn btn-secondary">Đơn Hàng</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
