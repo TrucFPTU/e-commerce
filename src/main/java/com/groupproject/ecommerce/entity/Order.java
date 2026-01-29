@@ -42,8 +42,13 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime placedAt;
 
+    // chống 2 staff update cùng lúc (khuyến nghị)
+    @Version
+    private Long version;
+
     @PrePersist
     void prePersist() {
         if (placedAt == null) placedAt = LocalDateTime.now();
+        if (status == null) status = OrderStatus.PROCESSING; // đơn mới tạo -> chờ staff confirm
     }
 }

@@ -23,6 +23,15 @@ public interface OrderService {
     void updateOrderStatusAfterPayment(Order order, PaymentStatus paymentStatus);
     Order checkout(User user, CheckoutRequest request, List<Long> selectedCartItemIds);
     void cancelOrder(User user, Long orderId);
+    List<Order> getOrdersWaitingConfirm();      // PROCESSING
+    Order getOrderOrThrow(Long orderId);
+    List<OrderItem> getOrderItems(Long orderId);
+    List<Order> getOrdersByStatus(OrderStatus status);
+    void confirm(Long orderId);
+    void ship(Long orderId);
+    void complete(Long orderId);
+    void cancel(Long orderId);
+    Order getOrderByCode(String orderCode);
 
 
 

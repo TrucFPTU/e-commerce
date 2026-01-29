@@ -11,8 +11,10 @@ import com.groupproject.ecommerce.repository.ProductRepository;
 import com.groupproject.ecommerce.service.inter.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,6 +29,92 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+
+
+    @Override
+    public Order getOrderByCode(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode);
+        if (order == null) {
+            throw new RuntimeException("Order not found");
+        }
+        return order;
+    }
+
+
+    @Override
+    public List<Order> getOrdersByStatus(OrderStatus status) {
+        return orderRepository.findByStatusOrderByPlacedAtDesc(status);
+    }
+
+
+    @Override
+    public List<Order> getOrdersWaitingConfirm() {
+        return orderRepository.findByStatusOrderByPlacedAtDesc(OrderStatus.PROCESSING);
+    }
+
+    @Override
+    public Order getOrderOrThrow(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+    }
+
+    @Override
+    public List<OrderItem> getOrderItems(Long orderId) {
+        // optional: check order exists
+        getOrderOrThrow(orderId);
+        return orderItemRepository.findByOrder_OrderId(orderId);
+    }
+
+    @Override
+    @Transactional
+    public void confirm(Long orderId) {
+        transition(orderId, OrderStatus.CONFIRMED);
+    }
+
+    @Override
+    @Transactional
+    public void ship(Long orderId) {
+        transition(orderId, OrderStatus.SHIPPING);
+    }
+
+    @Override
+    @Transactional
+    public void complete(Long orderId) {
+        transition(orderId, OrderStatus.COMPLETED);
+    }
+
+    @Override
+    @Transactional
+    public void cancel(Long orderId) {
+        transition(orderId, OrderStatus.CANCELLED);
+    }
+
+    private void transition(Long orderId, OrderStatus to) {
+        Order order = getOrderOrThrow(orderId);
+        OrderStatus from = order.getStatus();
+
+        if (!isAllowed(from, to)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid transition: " + from + " -> " + to
+            );
+        }
+
+        order.setStatus(to);
+        // dirty checking tự update
+    }
+
+    private boolean isAllowed(OrderStatus from, OrderStatus to) {
+        if (from == null || to == null) return false;
+        if (from == to) return true;
+
+        return switch (from) {
+            case PROCESSING -> (to == OrderStatus.CONFIRMED || to == OrderStatus.CANCELLED);
+            case CONFIRMED  -> (to == OrderStatus.SHIPPING  || to == OrderStatus.CANCELLED);
+            case SHIPPING   -> (to == OrderStatus.COMPLETED);
+            default -> false; // COMPLETED/CANCELLED/RETURNED/AWAITING_PAYMENT không cho staff đổi bậy
+        };
+    }
 
     @Override
     @Transactional

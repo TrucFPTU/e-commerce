@@ -219,6 +219,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void savePaymentTransaction(Map<String, String> params) {
         String txnRef = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
+        String transactionStatus = params.get("vnp_TransactionStatus"); // ✅ thêm
 
         PaymentTransaction tx = paymentTransactionRepository.findByTxnRef(txnRef).orElseGet(() -> {
             Long orderId = extractOrderIdFromTxnRef(txnRef);
@@ -245,17 +246,33 @@ public class PaymentServiceImpl implements PaymentService {
         tx.setBankCode(params.get("vnp_BankCode"));
         tx.setCardType(params.get("vnp_CardType"));
 
-        if (SUCCESS_RESPONSE_CODE.equals(responseCode)) {
+        // ✅ VNPAY success: ưu tiên vnp_TransactionStatus, fallback responseCode
+        boolean success =
+                SUCCESS_RESPONSE_CODE.equals(transactionStatus) ||
+                        (transactionStatus == null && SUCCESS_RESPONSE_CODE.equals(responseCode));
+
+        Order order = tx.getOrder();
+
+        if (success) {
             tx.setStatus(PaymentStatus.SUCCESS);
             setPaymentDate(tx, params.get("vnp_PayDate"));
+
+            // ✅ Thanh toán online thành công -> đơn rơi về PROCESSING cho staff xử lý
+            order.setStatus(OrderStatus.PROCESSING);
         } else {
             tx.setStatus(PaymentStatus.FAILED);
+
+            // ✅ Thất bại/pending -> vẫn là AWAITING_PAYMENT để retry
+            order.setStatus(OrderStatus.AWAITING_PAYMENT);
         }
 
         paymentTransactionRepository.save(tx);
+        orderRepository.save(order); // ✅ rất quan trọng: lưu order status
 
-        log.info("Saved/Updated payment transaction txnRef: {}, status: {}", txnRef, tx.getStatus());
+        log.info("Saved/Updated payment transaction txnRef: {}, txStatus: {}, orderStatus: {}",
+                txnRef, tx.getStatus(), order.getStatus());
     }
+
 
 
     private PaymentTransaction buildPaymentTransaction(Order order, Map<String, String> params) {

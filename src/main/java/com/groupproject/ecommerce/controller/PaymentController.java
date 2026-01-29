@@ -5,6 +5,7 @@ import com.groupproject.ecommerce.dto.response.PaymentResponse;
 import com.groupproject.ecommerce.entity.Order;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.OrderStatus;
+import com.groupproject.ecommerce.enums.PaymentStatus;
 import com.groupproject.ecommerce.service.inter.OrderService;
 import com.groupproject.ecommerce.service.inter.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,20 +90,33 @@ public class PaymentController {
 
     @GetMapping("/callback")
     public String handleVNPayCallback(@RequestParam Map<String, String> params, Model model) {
-        log.info("Received VNPay callback for transaction: {}", params.get("vnp_TxnRef"));
-        
+
+        String txnRef = params.get("vnp_TxnRef");
+        String responseCode = params.get("vnp_ResponseCode");
+        String transactionStatus = params.get("vnp_TransactionStatus");
+
+        log.info("[VNPAY CALLBACK] txnRef={}, responseCode={}, transactionStatus={}",
+                txnRef, responseCode, transactionStatus);
+
         boolean isValid = paymentService.handleVNPayCallback(params);
-        
-        if (isValid) {
-            processValidCallback(params, model);
-        } else {
+        log.info("[VNPAY CALLBACK] signatureValid={}", isValid);
+
+        if (!isValid) {
             model.addAttribute("status", "error");
             model.addAttribute("message", "Chữ ký không hợp lệ. Giao dịch bị từ chối");
+            addCommonAttributes(params, model);
+            return "payment/result";
         }
-        
+
+        // ✅ PaymentServiceImpl đã tự update PaymentTransaction + Order.status rồi
+        processValidCallback(params, model);
         addCommonAttributes(params, model);
         return "payment/result";
     }
+
+
+
+
 
     /**
      * Endpoint hiển thị kết quả thanh toán COD
