@@ -85,6 +85,47 @@ public class CartController {
         return "cart/view";
     }
 
+    /* ================= UPDATE QUANTITY ================= */
+
+    @PostMapping("/update/{id}")
+    public String updateQuantity(@PathVariable Long id,
+                                 @RequestParam Integer quantity,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+
+        User user = (User) session.getAttribute(SESSION_USER);
+        if (user == null) return "redirect:/login";
+
+        try {
+            cartService.updateQuantity(id, quantity);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật số lượng");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/cart";
+    }
+
+    /* ================= REMOVE ITEM ================= */
+
+    @PostMapping("/remove/{id}")
+    public String removeCartItem(@PathVariable Long id,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+
+        User user = (User) session.getAttribute(SESSION_USER);
+        if (user == null) return "redirect:/login";
+
+        try {
+            cartService.removeCartItem(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm khỏi giỏ hàng");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/cart";
+    }
+
     /* ================= CHECKOUT ================= */
 
     @PostMapping("/checkout")
