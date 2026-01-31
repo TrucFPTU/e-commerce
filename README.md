@@ -8,7 +8,7 @@ Dự án của nhóm là một hệ thống bán sách trực tuyến được p
 
 - **Backend**: Spring Boot (Java)
 - **Frontend**: Thymeleaf, HTML, CSS, JavaScript
-- **Database**: [Tên database của bạn]
+- **Database**: SQL server
 - **Payment Gateway**: VNPay
 - **AI Integration**: Chatbox AI hỗ trợ khách hàng
 
