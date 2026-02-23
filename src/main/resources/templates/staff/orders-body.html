@@ -68,6 +68,22 @@
          th:classappend="${statusFilter == 'SHIPPING'} ? ' active' : ''">
         🟣 SHIPPING
       </a>
+      <a class="tab"
+         th:href="@{/staff/orders(status='SHIPPED')}"
+         th:classappend="${statusFilter == 'SHIPPED'} ? ' active' : ''">
+        🟠 SHIPPED
+      </a>
+      <a class="tab"
+         th:href="@{/staff/orders(status='ISSUE')}"
+         th:classappend="${statusFilter == 'ISSUE'} ? ' active' : ''">
+        ⚫ ISSUE
+      </a>
+
+      <a class="tab"
+         th:href="@{/staff/orders(status='ISSUE_RECEIVED')}"
+         th:classappend="${statusFilter == 'ISSUE_RECEIVED'} ? ' active' : ''">
+        🟢 ISSUE_RECEIVED
+      </a>
 
       <a class="tab"
          th:href="@{/staff/orders(status='COMPLETED')}"
@@ -124,13 +140,14 @@
         <td><div th:text="${o.placedAt}">time</div></td>
 
         <td>
-          <span class="badge"
-                th:text="${o.status.name() == 'PROCESSING' ? '🟡 Chờ xác nhận' :
-                         (o.status.name() == 'CONFIRMED' ? '🔵 Đã xác nhận' :
-                         (o.status.name() == 'SHIPPING' ? '🟣 Đang giao' :
-                         (o.status.name() == 'COMPLETED' ? '🟢 Hoàn tất' :
-                         (o.status.name() == 'CANCELLED' ? '🔴 Đã hủy' : o.status.name()))))}">
-          </span>
+         <span class="badge"
+               th:text="${o.status.name() == 'PROCESSING' ? '🟡 Chờ xác nhận' :
+               (o.status.name() == 'CONFIRMED' ? '🔵 Đã xác nhận' :
+               (o.status.name() == 'SHIPPING' ? '🟣 Đang giao' :
+               (o.status.name() == 'SHIPPED' ? '🟠 Đã giao (chờ khách xác nhận)' :
+               (o.status.name() == 'COMPLETED' ? '🟢 Hoàn tất' :
+               (o.status.name() == 'CANCELLED' ? '🔴 Đã hủy' : o.status.name())))))}">
+</span>
         </td>
 
         <td>
@@ -152,11 +169,18 @@
             </form>
 
             <form th:if="${o.status.name() == 'SHIPPING'}"
-                  th:action="@{/staff/orders/{id}/complete(id=${o.orderId})}" method="post"
-                  onsubmit="return confirm('Hoàn tất (COMPLETED)?');">
+                  th:action="@{/staff/orders/{id}/shipped(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Xác nhận đã giao tới nơi (SHIPPED)?');">
               <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-              <button class="btn primary" type="submit">Complete</button>
+              <button class="btn primary" type="submit">SHIPPED</button>
             </form>
+            <form th:if="${o.status.name() == 'ISSUE_RECEIVED'}"
+                  th:action="@{/staff/orders/{id}/resolve(id=${o.orderId})}" method="post"
+                  onsubmit="return confirm('Đóng đơn (COMPLETED) sau khi khách đã xác nhận?');">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="btn primary" type="submit">Đã xử lý</button>
+            </form>
+
 
             <form th:if="${o.status.name() == 'PROCESSING' or o.status.name() == 'CONFIRMED'}"
                   th:action="@{/staff/orders/{id}/cancel(id=${o.orderId})}" method="post"

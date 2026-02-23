@@ -32,4 +32,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>{
     // Dashboard: Lấy đơn hàng trong khoảng thời gian
     @Query("SELECT o FROM Order o WHERE o.placedAt >= :startDate ORDER BY o.placedAt DESC")
     List<Order> findOrdersAfterDate(@Param("startDate") LocalDateTime startDate);
+
+    List<Order> findByStatusAndShippedAtIsNotNullAndShippedAtBefore(OrderStatus status, LocalDateTime time);
 }

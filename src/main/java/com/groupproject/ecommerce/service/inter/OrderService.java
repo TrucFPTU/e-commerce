@@ -14,11 +14,8 @@ import java.util.List;
 public interface OrderService {
     
     Order createOrderFromCart(User user, List<CartItem> cartItems, String phone, String address, BigDecimal total);
-    
     Order getOrderById(Long orderId);
-    
     List<Order> getOrdersByUser(User user);
-    
     List<Order> getOrdersByUserAndStatus(User user, OrderStatus status);
     void updateOrderStatusAfterPayment(Order order, PaymentStatus paymentStatus);
     Order checkout(User user, CheckoutRequest request, List<Long> selectedCartItemIds);
@@ -32,6 +29,11 @@ public interface OrderService {
     void complete(Long orderId);
     void cancel(Long orderId);
     Order getOrderByCode(String orderCode);
+    void shipped(Long orderId); // staff bấm “SHIPPED”
+    void autoCompleteShippedOrders(); // job 24h
+    void reportNotReceived(Long orderId, User user);      // SHIPPED -> ISSUE
+    void issueReceived(Long orderId, User user);          // ISSUE -> ISSUE_RECEIVED
+    void resolveIssue(Long orderId);                      // ISSUE_RECEIVED -> COMPLETED
 
 
 

@@ -51,4 +51,6 @@ public class Order {
         if (placedAt == null) placedAt = LocalDateTime.now();
         if (status == null) status = OrderStatus.PROCESSING; // đơn mới tạo -> chờ staff confirm
     }
+    @Column
+    private LocalDateTime shippedAt;
 }

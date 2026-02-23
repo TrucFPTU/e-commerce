@@ -6,9 +6,9 @@ import com.groupproject.ecommerce.entity.Attachment;
 import com.groupproject.ecommerce.entity.Conversation;
 import com.groupproject.ecommerce.entity.Message;
 import com.groupproject.ecommerce.entity.User;
-import com.groupproject.ecommerce.repository.AttachmentRepo;
-import com.groupproject.ecommerce.repository.ConversationRepo;
+import com.groupproject.ecommerce.service.inter.AttachmentService;
 import com.groupproject.ecommerce.service.inter.ChatService;
+import com.groupproject.ecommerce.service.inter.ConversationService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -32,8 +32,8 @@ import java.util.List;
 public class ChatRestController {
 
     private final ChatService chatService;
-    private final ConversationRepo conversationRepo;
-    private final AttachmentRepo attachmentRepo;
+    private final ConversationService conversationService;
+    private final AttachmentService attachmentService;
     private final MinioService minioService;
 
     @GetMapping("/bootstrap")
@@ -50,8 +50,7 @@ public class ChatRestController {
         Long oldestId = messages.isEmpty() ? null : messages.get(0).getMessageId();
         Long newestId = messages.isEmpty() ? null : messages.get(messages.size() - 1).getMessageId();
 
-        Conversation conv = conversationRepo.findById(conversationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
+        Conversation conv = conversationService.getConversationOrThrow(conversationId);
 
         return ChatBootstrapResponse.builder()
                 .conversationId(conversationId)
@@ -105,8 +104,7 @@ public class ChatRestController {
         User u = (User) session.getAttribute("LOGIN_USER");
         if (u == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
 
-        Attachment at = attachmentRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+        Attachment at = attachmentService.getAttachmentOrThrow(id);
 
         Message msg = at.getMessage();
         Conversation conv = msg.getConversation();

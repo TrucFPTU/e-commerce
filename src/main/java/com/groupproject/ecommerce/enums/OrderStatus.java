@@ -4,8 +4,11 @@ public enum OrderStatus {
     AWAITING_PAYMENT, // chờ thanh toán
     PROCESSING,
     SHIPPING,
+    SHIPPED,
     COMPLETED,
     CANCELLED,
     RETURNED,
-    CONFIRMED
+    CONFIRMED,
+    ISSUE,
+    ISSUE_RECEIVED
 }

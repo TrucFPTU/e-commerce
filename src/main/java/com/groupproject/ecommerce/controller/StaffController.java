@@ -4,7 +4,7 @@ import com.groupproject.ecommerce.dto.response.BookCardRes;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.ConversationStatus;
 import com.groupproject.ecommerce.enums.Role;
-import com.groupproject.ecommerce.repository.ConversationRepo;
+import com.groupproject.ecommerce.service.inter.ConversationService;
 import com.groupproject.ecommerce.service.inter.OrderService;
 import com.groupproject.ecommerce.service.inter.ProductService;
 import jakarta.servlet.http.HttpSession;
@@ -27,7 +27,7 @@ import java.util.Map;
 public class StaffController {
 
     private final OrderService orderService;
-    private final ConversationRepo conversationRepo;
+    private final ConversationService conversationService;
     private final ProductService productService;
 
     private User requireStaff(HttpSession session) {
@@ -88,6 +88,15 @@ public class StaffController {
         return "redirect:/staff/orders?status=SHIPPING";
     }
 
+    @PostMapping("/orders/{orderId}/shipped")
+    public String shipped(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.shipped(orderId);
+        return "redirect:/staff/orders?status=SHIPPED";
+    }
+
     @PostMapping("/orders/{orderId}/complete")
     public String complete(@PathVariable Long orderId, HttpSession session) {
         User staff = requireStaff(session);
@@ -121,8 +130,7 @@ public class StaffController {
         User staff = requireStaff(session);
         if (staff == null) return "redirect:/login";
 
-        var conversations = conversationRepo
-                .findByStaff_UserIdAndStatusOrderByLastMessageAtDesc(staff.getUserId(), ConversationStatus.OPEN);
+        var conversations = conversationService.getConversationsByStaffAndStatusOrderByLastMessageAtDesc(staff.getUserId(), ConversationStatus.OPEN);
 
         model.addAttribute("user", staff);
         model.addAttribute("conversations", conversations);
@@ -170,5 +178,13 @@ public class StaffController {
                 "total", books.size(),
                 "books", books
         );
+    }
+    @PostMapping("/orders/{orderId}/resolve")
+    public String resolve(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.resolveIssue(orderId);
+        return "redirect:/staff/orders?status=COMPLETED";
     }
 }

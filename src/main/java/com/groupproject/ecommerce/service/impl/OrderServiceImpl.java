@@ -101,6 +101,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(to);
+        if (to == OrderStatus.SHIPPED) {
+            order.setShippedAt(LocalDateTime.now());
+        }
         // dirty checking tự update
     }
 
@@ -111,8 +114,20 @@ public class OrderServiceImpl implements OrderService {
         return switch (from) {
             case PROCESSING -> (to == OrderStatus.CONFIRMED || to == OrderStatus.CANCELLED);
             case CONFIRMED  -> (to == OrderStatus.SHIPPING  || to == OrderStatus.CANCELLED);
-            case SHIPPING   -> (to == OrderStatus.COMPLETED);
-            default -> false; // COMPLETED/CANCELLED/RETURNED/AWAITING_PAYMENT không cho staff đổi bậy
+
+            case SHIPPING   -> (to == OrderStatus.SHIPPED);
+
+            // bình thường: khách xác nhận nhận hàng (auto 24h cũng vào đây)
+            // hoặc khách báo chưa nhận
+            case SHIPPED    -> (to == OrderStatus.COMPLETED || to == OrderStatus.ISSUE);
+
+            // case cần hỗ trợ: khách xác nhận đã nhận sau khi làm việc với shop
+            case ISSUE      -> (to == OrderStatus.ISSUE_RECEIVED);
+
+            // staff đóng case sau khi khách đã xác nhận
+            case ISSUE_RECEIVED -> (to == OrderStatus.COMPLETED);
+
+            default -> false;
         };
     }
 
@@ -265,6 +280,73 @@ public class OrderServiceImpl implements OrderService {
 
     private String generateOrderCode() {
         return "ORD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+    }
+
+    @Override
+    @Transactional
+    public void shipped(Long orderId) {
+        transition(orderId, OrderStatus.SHIPPED);
+    }
+
+    @Override
+    @Transactional
+    public void autoCompleteShippedOrders() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+
+        List<Order> overdue = orderRepository
+                .findByStatusAndShippedAtIsNotNullAndShippedAtBefore(OrderStatus.SHIPPED, cutoff);
+
+        for (Order o : overdue) {
+            transition(o.getOrderId(), OrderStatus.COMPLETED);
+        }
+    }
+    @Override
+    @Transactional
+    public void reportNotReceived(Long orderId, User user) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (!order.getUser().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền thao tác đơn này");
+        }
+
+        if (order.getStatus() != OrderStatus.SHIPPED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn không ở trạng thái đã giao");
+        }
+
+        // ✅ set trực tiếp trên entity đang quản lý
+        order.setStatus(OrderStatus.ISSUE);
+        order.setShippedAt(null);
+
+        // ✅ ép save để chắc chắn DB update
+        orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional
+    public void issueReceived(Long orderId, User user) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (!order.getUser().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền thao tác đơn này");
+        }
+
+        if (order.getStatus() != OrderStatus.ISSUE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn không ở trạng thái cần hỗ trợ");
+        }
+
+        transition(orderId, OrderStatus.ISSUE_RECEIVED);
+    }
+
+    @Override
+    @Transactional
+    public void resolveIssue(Long orderId) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.ISSUE_RECEIVED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ đóng case khi khách đã xác nhận nhận hàng");
+        }
+
+        transition(orderId, OrderStatus.COMPLETED);
     }
 
 }
