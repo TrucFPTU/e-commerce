@@ -82,10 +82,10 @@
                 </form>
 
                 <form th:if="${order.status.name() == 'SHIPPING'}"
-                      th:action="@{/staff/orders/{id}/complete(id=${order.orderId})}" method="post"
-                      onsubmit="return confirm('Hoàn tất (COMPLETED)?');">
+                      th:action="@{/staff/orders/{id}/shipped(id=${order.orderId})}" method="post"
+                      onsubmit="return confirm('Xác nhận đã giao tới nơi (SHIPPED)?');">
                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button class="btn primary" type="submit">Complete</button>
+                    <button class="btn primary" type="submit">SHIPPED</button>
                 </form>
 
                 <form th:if="${order.status.name() == 'PROCESSING' or order.status.name() == 'CONFIRMED'}"

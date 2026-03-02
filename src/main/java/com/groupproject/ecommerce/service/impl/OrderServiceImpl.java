@@ -291,7 +291,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void autoCompleteShippedOrders() {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);//minusMinutes(2);
 
         List<Order> overdue = orderRepository
                 .findByStatusAndShippedAtIsNotNullAndShippedAtBefore(OrderStatus.SHIPPED, cutoff);

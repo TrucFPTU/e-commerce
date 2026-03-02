@@ -11,7 +11,7 @@ public class OrderAutoCompleteJob {
 
     private final OrderService orderService;
 
-    @Scheduled(fixedDelay = 5 * 60 * 1000) // 5 phút/lần
+    @Scheduled(fixedDelay = 10_000) // 10_000  /5 * 60 * 10005 phút/lần
     public void run() {
         orderService.autoCompleteShippedOrders();
     }
