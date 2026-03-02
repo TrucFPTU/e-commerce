@@ -65,6 +65,21 @@ public class CustomerController {
 
         return "redirect:/profile";
     }
+    @PostMapping("/orders/{orderId}/received")
+    public String confirmReceived(@PathVariable Long orderId, HttpSession session, RedirectAttributes ra) {
+        User user = (User) session.getAttribute("LOGIN_USER");
+        if (user == null) return "redirect:/login";
+
+        try {
+            orderService.complete(orderId);
+            ra.addFlashAttribute("successMessage", "Cảm ơn bạn đã xác nhận nhận hàng!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/orders?status=COMPLETED";
+    }
+
     @PostMapping("/orders/{orderId}/not-received")
     public String notReceived(@PathVariable Long orderId, HttpSession session, RedirectAttributes ra) {
         User user = (User) session.getAttribute("LOGIN_USER");

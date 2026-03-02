@@ -186,12 +186,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void addTimestampParams(Map<String, String> params) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        TimeZone vnTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar calendar = Calendar.getInstance(vnTimeZone);
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-        
+        formatter.setTimeZone(vnTimeZone);
+
         String createDate = formatter.format(calendar.getTime());
         params.put("vnp_CreateDate", createDate);
-        
+
         calendar.add(Calendar.MINUTE, PAYMENT_TIMEOUT_MINUTES);
         String expireDate = formatter.format(calendar.getTime());
         params.put("vnp_ExpireDate", expireDate);
@@ -316,18 +318,17 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             List<String> fieldNames = new ArrayList<>(params.keySet());
             Collections.sort(fieldNames);
-            
+
             StringBuilder hashData = new StringBuilder();
             StringBuilder query = new StringBuilder();
 
             for (String fieldName : fieldNames) {
                 String fieldValue = params.get(fieldName);
                 if (fieldValue != null && !fieldValue.isEmpty()) {
-                    String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString());
-                    
+                    String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString());
+
                     hashData.append(fieldName).append('=').append(encodedValue);
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()))
-                         .append('=').append(encodedValue);
+                    query.append(fieldName).append('=').append(encodedValue);
 
                     if (!fieldName.equals(fieldNames.get(fieldNames.size() - 1))) {
                         query.append('&');
@@ -338,7 +339,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             String secureHash = VNPayConfig.hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
             return vnPayConfig.getVnpayUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
-            
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to build payment URL", e);
         }
