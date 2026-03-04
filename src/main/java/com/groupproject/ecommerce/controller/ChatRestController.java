@@ -6,12 +6,12 @@ import com.groupproject.ecommerce.entity.Attachment;
 import com.groupproject.ecommerce.entity.Conversation;
 import com.groupproject.ecommerce.entity.Message;
 import com.groupproject.ecommerce.entity.User;
-import com.groupproject.ecommerce.repository.AttachmentRepo;
-import com.groupproject.ecommerce.repository.ConversationRepo;
+import com.groupproject.ecommerce.service.inter.AttachmentService;
 import com.groupproject.ecommerce.service.inter.ChatService;
+import com.groupproject.ecommerce.service.inter.ConversationService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.groupproject.ecommerce.service.impl.MinioService;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +32,9 @@ import java.util.List;
 public class ChatRestController {
 
     private final ChatService chatService;
-    private final ConversationRepo conversationRepo;
-    private final AttachmentRepo attachmentRepo;
+    private final ConversationService conversationService;
+    private final AttachmentService attachmentService;
+    private final MinioService minioService;
 
     @GetMapping("/bootstrap")
     public ChatBootstrapResponse bootstrap(HttpSession session,
@@ -49,8 +50,7 @@ public class ChatRestController {
         Long oldestId = messages.isEmpty() ? null : messages.get(0).getMessageId();
         Long newestId = messages.isEmpty() ? null : messages.get(messages.size() - 1).getMessageId();
 
-        Conversation conv = conversationRepo.findById(conversationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
+        Conversation conv = conversationService.getConversationOrThrow(conversationId);
 
         return ChatBootstrapResponse.builder()
                 .conversationId(conversationId)
@@ -76,8 +76,6 @@ public class ChatRestController {
 
         int safeLimit = Math.max(1, Math.min(limit, 100));
 
-        // NOTE: hiện service.getOlderMessages() chưa check "requester có thuộc conversation không"
-        // nhưng bạn đã check khi gửi message rồi. Nếu muốn chặt hơn, mình sẽ bổ sung check trong service sau.
         return chatService.getOlderMessages(conversationId, beforeMessageId, safeLimit, u.getUserId());
 
     }
@@ -102,15 +100,13 @@ public class ChatRestController {
     }
 
     @GetMapping("/file/{id}")
-    public ResponseEntity<Resource> downloadChatFile(HttpSession session, @PathVariable Long id) {
+    public ResponseEntity<InputStreamResource> downloadChatFile(HttpSession session, @PathVariable Long id) {
         User u = (User) session.getAttribute("LOGIN_USER");
         if (u == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not logged in");
 
-        Attachment at = attachmentRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+        Attachment at = attachmentService.getAttachmentOrThrow(id);
 
-        // CHỐT: check quyền theo conversation
-        Message msg = at.getMessage(); // LAZY ok vì đang trong request
+        Message msg = at.getMessage();
         Conversation conv = msg.getConversation();
         Long uid = u.getUserId();
         boolean allowed =
@@ -118,17 +114,18 @@ public class ChatRestController {
 
         if (!allowed) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden");
 
-        Path filePath = Paths.get(System.getProperty("user.dir"), "uploads", "chat", at.getStoredName());
+        try {
+            InputStream inputStream = minioService.getFile(at.getStoredName());
+            InputStreamResource resource = new InputStreamResource(inputStream);
 
-        if (!Files.exists(filePath)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File missing");
-
-        Resource res = new org.springframework.core.io.FileSystemResource(filePath);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(at.getMimeType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + at.getOriginalName().replace("\"", "") + "\"")
-                .body(res);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(at.getMimeType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + at.getOriginalName().replace("\"", "") + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found in storage");
+        }
     }
 
 

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+
     private final String SESSION_USER = "LOGIN_USER";
 
     @GetMapping("/")
@@ -35,7 +36,10 @@ public class AuthController {
     public String doLogin(@Valid @ModelAttribute("loginRequest") LoginRequest req,
                           BindingResult bindingResult,
                           HttpSession session, Model model) {
-      if(bindingResult.hasErrors()) return "auth/login";
+      if(bindingResult.hasErrors()) {
+          model.addAttribute("loginRequest", req);
+          return "auth/login";
+      }
       try{
           User user = authService.login(req.getEmail(), req.getPassWord());
           session.setAttribute(SESSION_USER, user);
@@ -47,6 +51,7 @@ public class AuthController {
 
       }catch (RuntimeException e){
             model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("loginRequest", req);
             return "auth/login";
       }
     }
@@ -71,7 +76,8 @@ public class AuthController {
         try {
             authService.register(req);
             model.addAttribute("successMessage", "Đăng ký thành công. Vui lòng đăng nhập.");
-            return "auth/login"; // hoặc redirect:/login nếu bạn muốn
+            model.addAttribute("loginRequest", new LoginRequest());
+            return "auth/login";
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "customer/register";

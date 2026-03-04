@@ -1,22 +1,34 @@
 package com.groupproject.ecommerce.controller;
 
+import com.groupproject.ecommerce.dto.response.BookCardRes;
 import com.groupproject.ecommerce.entity.User;
 import com.groupproject.ecommerce.enums.ConversationStatus;
 import com.groupproject.ecommerce.enums.Role;
-import com.groupproject.ecommerce.repository.ConversationRepo;
+import com.groupproject.ecommerce.service.inter.ConversationService;
+import com.groupproject.ecommerce.service.inter.OrderService;
+import com.groupproject.ecommerce.service.inter.ProductService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/staff")
 public class StaffController {
 
-    private final ConversationRepo conversationRepo;
+    private final OrderService orderService;
+    private final ConversationService conversationService;
+    private final ProductService productService;
 
     private User requireStaff(HttpSession session) {
         User u = (User) session.getAttribute("LOGIN_USER");
@@ -24,6 +36,87 @@ public class StaffController {
         if (u.getRole() != Role.STAFF) return null;
         return u;
     }
+
+    // Inbox: chỉ những đơn chờ confirm (PROCESSING)
+    @GetMapping("/orders")
+    public String listProcessing(
+            @RequestParam(name = "status", required = false) String status,
+            Model model,
+            HttpSession session
+    ) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        model.addAttribute("user", staff);
+
+        String statusFilter = (status == null || status.isBlank()) ? "PROCESSING" : status.trim();
+        model.addAttribute("statusFilter", statusFilter);
+
+        var st = com.groupproject.ecommerce.enums.OrderStatus.valueOf(statusFilter);
+        model.addAttribute("orders", orderService.getOrdersByStatus(st));
+
+        return "staff/orders";
+    }
+
+    // Detail để thao tác theo status
+    @GetMapping("/orders/{orderId}")
+    public String detail(@PathVariable Long orderId, Model model, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        model.addAttribute("user", staff);
+        model.addAttribute("order", orderService.getOrderOrThrow(orderId));
+        model.addAttribute("items", orderService.getOrderItems(orderId));
+        return "staff/order-detail";
+    }
+
+    @PostMapping("/orders/{orderId}/confirm")
+    public String confirm(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.confirm(orderId);
+        return "redirect:/staff/orders?status=CONFIRMED";
+    }
+
+    @PostMapping("/orders/{orderId}/ship")
+    public String ship(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.ship(orderId);
+        return "redirect:/staff/orders?status=SHIPPING";
+    }
+
+    @PostMapping("/orders/{orderId}/shipped")
+    public String shipped(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.shipped(orderId);
+        return "redirect:/staff/orders?status=SHIPPED";
+    }
+
+    @PostMapping("/orders/{orderId}/complete")
+    public String complete(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.complete(orderId);
+        return "redirect:/staff/orders?status=COMPLETED";
+    }
+
+    @PostMapping("/orders/{orderId}/cancel")
+    public String cancel(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.cancel(orderId);
+        return "redirect:/staff/orders?status=CANCELLED";
+    }
+
+
+
 
     @GetMapping
     public String staffHome(HttpSession session) {
@@ -37,20 +130,61 @@ public class StaffController {
         User staff = requireStaff(session);
         if (staff == null) return "redirect:/login";
 
-        var conversations = conversationRepo
-                .findByStaff_UserIdAndStatusOrderByLastMessageAtDesc(staff.getUserId(), ConversationStatus.OPEN);
+        var conversations = conversationService.getConversationsByStaffAndStatusOrderByLastMessageAtDesc(staff.getUserId(), ConversationStatus.OPEN);
 
         model.addAttribute("user", staff);
         model.addAttribute("conversations", conversations);
         return "staff/chat"; // templates/staff/chat.html (UI bạn sẽ làm)
     }
 
-    @GetMapping("/orders")
-    public String orders(Model model, HttpSession session) {
+
+    @GetMapping("/inventory")
+    public String inventory(@RequestParam(name = "q", required = false) String q,
+                            Model model,
+                            HttpSession session) {
         User staff = requireStaff(session);
         if (staff == null) return "redirect:/login";
 
+        String keyword = (q == null) ? "" : q.trim();
+
+        List<BookCardRes> books = keyword.isBlank()
+                ? productService.getHomeBooks()
+                : productService.searchHomeBooks(keyword);
+
         model.addAttribute("user", staff);
-        return "staff/orders"; // placeholder
+        model.addAttribute("q", keyword);
+        model.addAttribute("books", books);
+        model.addAttribute("total", books.size());
+        return "staff/inventory";
+    }
+    @GetMapping("/inventory/search")
+    @ResponseBody
+    public Map<String, Object> inventoryLiveSearch(
+            @RequestParam(name = "q", required = false) String q,
+            HttpSession session
+    ) {
+        User staff = requireStaff(session);
+        if (staff == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        String keyword = (q == null) ? "" : q.trim();
+
+        List<BookCardRes> books = keyword.isBlank()
+                ? productService.getHomeBooks()
+                : productService.searchHomeBooks(keyword);
+
+        return Map.of(
+                "total", books.size(),
+                "books", books
+        );
+    }
+    @PostMapping("/orders/{orderId}/resolve")
+    public String resolve(@PathVariable Long orderId, HttpSession session) {
+        User staff = requireStaff(session);
+        if (staff == null) return "redirect:/login";
+
+        orderService.resolveIssue(orderId);
+        return "redirect:/staff/orders?status=COMPLETED";
     }
 }

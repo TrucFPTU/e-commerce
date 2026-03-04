@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="admin/layout :: layout(
+        'Quản lý sản phẩm',
+        'products',
+        ~{admin/products-head :: head},
+        ~{admin/products-body :: body},
+        ${user}
+      )">
+</html>

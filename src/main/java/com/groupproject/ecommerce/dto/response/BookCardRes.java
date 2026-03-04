@@ -21,4 +21,6 @@ public class BookCardRes {
     private Long publisherId;
     private Long authorId;
     private Long supplierId;
+    private Long categoryId;
+    private String categoryName;
 }

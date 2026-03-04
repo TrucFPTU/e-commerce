@@ -22,8 +22,9 @@ public class Order {
     private String orderCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
@@ -41,8 +42,15 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime placedAt;
 
+    // chống 2 staff update cùng lúc (khuyến nghị)
+    @Version
+    private Long version;
+
     @PrePersist
     void prePersist() {
         if (placedAt == null) placedAt = LocalDateTime.now();
+        if (status == null) status = OrderStatus.PROCESSING; // đơn mới tạo -> chờ staff confirm
     }
+    @Column
+    private LocalDateTime shippedAt;
 }

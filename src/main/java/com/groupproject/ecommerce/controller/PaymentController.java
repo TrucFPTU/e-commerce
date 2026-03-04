@@ -2,8 +2,14 @@ package com.groupproject.ecommerce.controller;
 
 import com.groupproject.ecommerce.dto.request.PaymentRequest;
 import com.groupproject.ecommerce.dto.response.PaymentResponse;
+import com.groupproject.ecommerce.entity.Order;
+import com.groupproject.ecommerce.entity.User;
+import com.groupproject.ecommerce.enums.OrderStatus;
+import com.groupproject.ecommerce.enums.PaymentStatus;
+import com.groupproject.ecommerce.service.inter.OrderService;
 import com.groupproject.ecommerce.service.inter.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -24,15 +31,46 @@ public class PaymentController {
 
     private static final String SUCCESS_RESPONSE_CODE = "00";
     private static final int VNPAY_AMOUNT_DIVIDER = 100;
-    
+    private final OrderService orderService;
     private final PaymentService paymentService;
 
-    /**
-     * API endpoint tạo URL thanh toán VNPay
-     * @param request Payment request
-     * @param httpRequest HTTP request để lấy IP
-     * @return ResponseEntity chứa payment URL
-     */
+    @GetMapping("/vnpay/retry")
+    public String retryPayment(
+            @RequestParam Long orderId,
+            HttpSession session,
+            HttpServletRequest request
+    ) {
+
+        User user = (User) session.getAttribute("LOGIN_USER");
+        if (user == null) return "redirect:/login";
+
+        Order order = orderService.getOrderById(orderId);
+
+        // chặn thanh toán đơn người khác
+        if (!order.getUser().getUserId().equals(user.getUserId())) {
+            return "redirect:/orders";
+        }
+
+        // chỉ cho retry khi AWAITING_PAYMENT hoặc CANCELLED
+        if (order.getStatus() != OrderStatus.AWAITING_PAYMENT &&
+                order.getStatus() != OrderStatus.CANCELLED) {
+            return "redirect:/orders/" + orderId;
+        }
+
+        PaymentRequest paymentRequest = new PaymentRequest();
+        paymentRequest.setOrderId(order.getOrderId());
+        paymentRequest.setAmount(order.getTotal().longValue());
+        paymentRequest.setOrderInfo("Thanh toan lai don hang " + order.getOrderCode());
+
+        String ipAddress = request.getRemoteAddr();
+        PaymentResponse response =
+                paymentService.createVNPayPayment(paymentRequest, ipAddress);
+
+        return "redirect:" + response.getPaymentUrl();
+    }
+
+
+
     @PostMapping("/create-vnpay")
     @ResponseBody
     public ResponseEntity<PaymentResponse> createVNPayPayment(
@@ -49,28 +87,36 @@ public class PaymentController {
                 : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Callback endpoint từ VNPay sau khi thanh toán
-     * @param params Parameters từ VNPay
-     * @param model Model để truyền dữ liệu sang view
-     * @return View result page
-     */
+
     @GetMapping("/callback")
     public String handleVNPayCallback(@RequestParam Map<String, String> params, Model model) {
-        log.info("Received VNPay callback for transaction: {}", params.get("vnp_TxnRef"));
-        
+
+        String txnRef = params.get("vnp_TxnRef");
+        String responseCode = params.get("vnp_ResponseCode");
+        String transactionStatus = params.get("vnp_TransactionStatus");
+
+        log.info("[VNPAY CALLBACK] txnRef={}, responseCode={}, transactionStatus={}",
+                txnRef, responseCode, transactionStatus);
+
         boolean isValid = paymentService.handleVNPayCallback(params);
-        
-        if (isValid) {
-            processValidCallback(params, model);
-        } else {
+        log.info("[VNPAY CALLBACK] signatureValid={}", isValid);
+
+        if (!isValid) {
             model.addAttribute("status", "error");
             model.addAttribute("message", "Chữ ký không hợp lệ. Giao dịch bị từ chối");
+            addCommonAttributes(params, model);
+            return "payment/result";
         }
-        
+
+        // ✅ PaymentServiceImpl đã tự update PaymentTransaction + Order.status rồi
+        processValidCallback(params, model);
         addCommonAttributes(params, model);
         return "payment/result";
     }
+
+
+
+
 
     /**
      * Endpoint hiển thị kết quả thanh toán COD
@@ -78,9 +124,29 @@ public class PaymentController {
      * @return View result page
      */
     @GetMapping("/result")
-    public String showPaymentResult(Model model) {
+    public String showPaymentResult(
+            @RequestParam(required = false) String paymentMethod,
+            @RequestParam(required = false) String orderCode,
+            @RequestParam(required = false) BigDecimal amount,
+            Model model
+    ) {
+
+        // ===== CASH / COD =====
+        if ("CASH".equalsIgnoreCase(paymentMethod)) {
+            model.addAttribute("status", "success");
+            model.addAttribute("message", "Đặt hàng thành công. Thanh toán khi nhận hàng.");
+            model.addAttribute("paymentMethod", "CASH");
+            model.addAttribute("orderCode", orderCode);
+            model.addAttribute("amount", amount);
+            return "payment/result";
+        }
+
+        // ===== FALLBACK (phòng trường hợp truy cập thẳng URL) =====
+        model.addAttribute("status", "error");
+        model.addAttribute("message", "Không xác định được phương thức thanh toán");
         return "payment/result";
     }
+
 
     /**
      * API endpoint lấy trạng thái thanh toán của đơn hàng

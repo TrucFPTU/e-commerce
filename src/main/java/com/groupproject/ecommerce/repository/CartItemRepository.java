@@ -15,7 +15,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     List<CartItem> findByUser(User user);
     Optional<CartItem> findByUserAndProduct_ProductId(User user, Long productId);
     void deleteByUser(User user);
-
+    List<CartItem> findByUser_UserId(Long userId);
     @Query("select coalesce(sum(ci.quantity), 0) from CartItem ci where ci.user = :user")
     Integer sumQuantityByUser(@Param("user") User user);
 }

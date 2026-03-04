@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="body">
+    <!-- Search Section -->
+    <div class="search-section">
+        <p>Gõ là ra kết quả ngay. Tìm kiếm theo: tên nhà xuất bản.</p>
+        <div class="search-controls">
+            <input type="text" class="search-input" id="searchInput" placeholder="Nhập từ khóa để tìm nhà xuất bản...">
+            <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; AdminPublisher.initSearch(); AdminPublisher.updateCount();">Xóa lọc</button>
+            <button class="btn btn-success" onclick="AdminPublisher.openAddModal()">+ Thêm nhà xuất bản mới</button>
+        </div>
+    </div>
+
+    <!-- Publishers Table -->
+    <div class="publishers-section">
+        <div class="section-header">
+            <h2>Danh sách nhà xuất bản</h2>
+            <span class="total-count">Tổng: <strong id="publisherCount" th:text="${#lists.size(publishers)}">0</strong> nhà xuất bản</span>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="publishersTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px">Mã</th>
+                        <th>Tên nhà xuất bản</th>
+                        <th style="width: 200px; text-align: center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="publisher : ${publishers}" th:data-search="${publisher.publisherId + ' ' + publisher.name}">
+                        <td th:text="${publisher.publisherId}">1</td>
+                        <td>
+                            <strong th:text="${publisher.name}">Nhà xuất bản A</strong>
+                        </td>
+                        <td style="text-align: center">
+                            <div class="action-buttons" style="justify-content: center">
+                                <button class="btn btn-primary btn-sm" 
+                                        th:data-id="${publisher.publisherId}"
+                                        onclick="AdminPublisher.openEditModal(this.dataset.id)"
+                                        title="Chỉnh sửa">
+                                    ✏️ Sửa
+                                </button>
+                                <button class="btn btn-danger btn-sm" 
+                                        th:data-id="${publisher.publisherId}"
+                                        th:data-name="${publisher.name}"
+                                        onclick="AdminPublisher.deletePublisher(this.dataset.id, this.dataset.name)"
+                                        title="Xóa">
+                                    🗑️ Xóa
+                                </button>
+                            </div>
+                            
+                            <!-- Hidden delete form -->
+                            <form th:id="'deleteForm_' + ${publisher.publisherId}" 
+                                  th:action="@{/admin/publishers/delete/{id}(id=${publisher.publisherId})}" 
+                                  method="post" 
+                                  style="display:none">
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="publisherModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Thêm Nhà xuất bản Mới</h2>
+                <button type="button" class="close-btn" onclick="AdminPublisher.closeModal()">&times;</button>
+            </div>
+
+            <form id="publisherForm" th:action="@{/admin/publishers/save}" method="post">
+                <input type="hidden" id="publisherId" name="publisherId">
+
+                <div class="form-group">
+                    <label for="name">Tên nhà xuất bản <span style="color:red">*</span></label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           required
+                           placeholder="Nhập tên nhà xuất bản">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="AdminPublisher.closeModal()">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>
+
+</html>

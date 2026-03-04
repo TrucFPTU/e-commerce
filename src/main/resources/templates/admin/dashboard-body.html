@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="body">
+    <div id="dashboard-content">
+        <!-- Loading State -->
+        <div class="loading" id="loading-spinner">
+            <div class="spinner"></div>
+            <p style="font-size: 16px; font-weight: 500;">Đang tải dữ liệu thống kê...</p>
+        </div>
+
+        <!-- Main Dashboard Content (hidden until data loads) -->
+        <div id="main-content" style="display: none;">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-header">
+                        <div class="stat-label">Tổng đơn hàng</div>
+                        <div class="stat-icon">📦</div>
+                    </div>
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-change">Tất cả đơn hàng trong hệ thống</div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-header">
+                        <div class="stat-label">Tổng doanh thu</div>
+                        <div class="stat-icon">💰</div>
+                    </div>
+                    <div class="stat-value" id="totalRevenue">0 đ</div>
+                    <div class="stat-change">Từ đơn hoàn thành & đang giao</div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <div class="stat-label">Tổng khách hàng</div>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-change">Khách hàng đã đăng ký</div>
+                </div>
+                
+                <div class="stat-card danger">
+                    <div class="stat-header">
+                        <div class="stat-label">Tổng sản phẩm</div>
+                        <div class="stat-icon">📚</div>
+                    </div>
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-change">Sách trong kho</div>
+                </div>
+            </div>
+
+            <!-- Order Status -->
+            <div class="chart-container" style="margin-bottom: 32px;">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">📊 Trạng thái đơn hàng</h3>
+                        <div class="chart-subtitle">Phân loại theo trạng thái xử lý</div>
+                    </div>
+                </div>
+                <div class="order-status-grid">
+                    <div class="status-card">
+                        <div class="icon">⏳</div>
+                        <div class="count" id="pendingOrders">0</div>
+                        <div class="label">Chờ thanh toán</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="icon">📦</div>
+                        <div class="count" id="processingOrders">0</div>
+                        <div class="label">Đang xử lý</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="icon">🚚</div>
+                        <div class="count" id="shippedOrders">0</div>
+                        <div class="label">Đang giao</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="icon">✅</div>
+                        <div class="count" id="completedOrders">0</div>
+                        <div class="label">Hoàn thành</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="icon">❌</div>
+                        <div class="count" id="cancelledOrders">0</div>
+                        <div class="label">Đã hủy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="chart-container full-width">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">📈 Biểu đồ doanh thu</h3>
+                        <div class="chart-subtitle">Doanh thu 30 ngày gần nhất</div>
+                    </div>
+                </div>
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Order Status Pie Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">🥧 Phân bổ đơn hàng</h3>
+                            <div class="chart-subtitle">Theo trạng thái</div>
+                        </div>
+                    </div>
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+
+                <!-- Top Categories Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">📊 Top danh mục</h3>
+                            <div class="chart-subtitle">5 danh mục bán chạy nhất</div>
+                        </div>
+                    </div>
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Products Table -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">🏆 Top 10 sách bán chạy nhất</h3>
+                        <div class="chart-subtitle">Sắp xếp theo số lượng bán</div>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="top-items-table" id="topProductsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">#</th>
+                                <th>Tên sách</th>
+                                <th style="width: 150px; text-align: right;">Số lượng bán</th>
+                                <th style="width: 180px; text-align: right;">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount)) + ' đ';
+        }
+
+        // Format number
+        function formatNumber(num) {
+            return new Intl.NumberFormat('vi-VN').format(num);
+        }
+
+        // Load all dashboard data
+        async function loadDashboard() {
+            try {
+                // Load stats
+                const statsResponse = await fetch('/admin/dashboard/api/stats');
+                if (!statsResponse.ok) throw new Error('Failed to load stats');
+                const stats = await statsResponse.json();
+
+                // Update stats cards
+                document.getElementById('totalOrders').textContent = formatNumber(stats.totalOrders);
+                document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalRevenue);
+                document.getElementById('totalCustomers').textContent = formatNumber(stats.totalCustomers);
+                document.getElementById('totalProducts').textContent = formatNumber(stats.totalProducts);
+
+                // Update order status
+                document.getElementById('pendingOrders').textContent = formatNumber(stats.awaitingPaymentOrders);
+                document.getElementById('processingOrders').textContent = formatNumber(stats.processingOrders);
+                document.getElementById('shippedOrders').textContent = formatNumber(stats.shippingOrders);
+                document.getElementById('completedOrders').textContent = formatNumber(stats.completedOrders);
+                document.getElementById('cancelledOrders').textContent = formatNumber(stats.cancelledOrders);
+
+                // Load revenue chart
+                const revenueResponse = await fetch('/admin/dashboard/api/revenue?days=30');
+                if (!revenueResponse.ok) throw new Error('Failed to load revenue data');
+                const revenueData = await revenueResponse.json();
+                createRevenueChart(revenueData);
+
+                // Create order status pie chart
+                createOrderStatusChart(stats);
+
+                // Load top products
+                const productsResponse = await fetch('/admin/dashboard/api/top-products?limit=10');
+                if (!productsResponse.ok) throw new Error('Failed to load top products');
+                const topProducts = await productsResponse.json();
+                populateTopProductsTable(topProducts);
+
+                // Load top categories
+                const categoriesResponse = await fetch('/admin/dashboard/api/top-categories?limit=5');
+                if (!categoriesResponse.ok) throw new Error('Failed to load top categories');
+                const topCategories = await categoriesResponse.json();
+                createCategoriesChart(topCategories);
+
+                // Hide loading, show content
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('loading-spinner').innerHTML = 
+                    '<div class="error-state">' +
+                    '<div class="error-state-icon">❌</div>' +
+                    '<p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Lỗi khi tải dữ liệu</p>' +
+                    '<p style="font-size: 14px;">Vui lòng thử lại sau hoặc liên hệ quản trị viên.</p>' +
+                    '</div>';
+            }
+        }
+
+        // Create revenue line chart
+        function createRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (data.length === 0) {
+                ctx.canvas.parentElement.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<div class="empty-state-icon">📊</div>' +
+                    '<div class="empty-state-text">Chưa có dữ liệu doanh thu</div>' +
+                    '</div>';
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => {
+                        const date = new Date(d.date);
+                        return date.getDate() + '/' + (date.getMonth() + 1);
+                    }),
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: data.map(d => d.revenue),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: { size: 13, weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: '600' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatCurrency(context.parsed.y);
+                                },
+                                afterLabel: function(context) {
+                                    const item = data[context.dataIndex];
+                                    return 'Đơn hàng: ' + item.orderCount;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: { size: 12 },
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000) + 'M đ';
+                                    }
+                                    return formatCurrency(value);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create order status pie chart
+        function createOrderStatusChart(stats) {
+            const ctx = document.getElementById('orderStatusChart').getContext('2d');
+            const total = stats.awaitingPaymentOrders + stats.processingOrders + stats.shippingOrders + 
+                         stats.completedOrders + stats.cancelledOrders;
+            
+            if (total === 0) {
+                ctx.canvas.parentElement.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<div class="empty-state-icon">🥧</div>' +
+                    '<div class="empty-state-text">Chưa có đơn hàng</div>' +
+                    '</div>';
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chờ thanh toán', 'Đang xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
+                    datasets: [{
+                        data: [
+                            stats.awaitingPaymentOrders,
+                            stats.processingOrders,
+                            stats.shippingOrders,
+                            stats.completedOrders,
+                            stats.cancelledOrders
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: { size: 12, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create categories bar chart
+        function createCategoriesChart(categories) {
+            const ctx = document.getElementById('categoriesChart').getContext('2d');
+            
+            if (categories.length === 0) {
+                ctx.canvas.parentElement.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<div class="empty-state-icon">📊</div>' +
+                    '<div class="empty-state-text">Chưa có dữ liệu danh mục</div>' +
+                    '</div>';
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories.map(c => c.categoryName),
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: categories.map(c => c.totalRevenue),
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatCurrency(context.parsed.x);
+                                },
+                                afterLabel: function(context) {
+                                    const item = categories[context.dataIndex];
+                                    return 'Số lượng: ' + formatNumber(item.totalSold);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: { size: 11 },
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000) + 'M';
+                                    }
+                                    return value;
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { size: 12, weight: '500' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate top products table
+        function populateTopProductsTable(products) {
+            const tbody = document.querySelector('#topProductsTable tbody');
+            tbody.innerHTML = '';
+            
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">📚</div>
+                            <div style="color: #999;">Chưa có dữ liệu sản phẩm bán chạy</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            products.forEach((product, index) => {
+                const badge = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                const row = `
+                    <tr>
+                        <td>${badge ? '<span class="badge ' + badge + '">#' + (index + 1) + '</span>' : '#' + (index + 1)}</td>
+                        <td style="font-weight: 500;">${product.productName}</td>
+                        <td style="text-align: right; font-weight: 600;">${formatNumber(product.totalSold)}</td>
+                        <td style="text-align: right; color: #4CAF50; font-weight: 600;">${formatCurrency(product.totalRevenue)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+
+
+        // Load dashboard when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</th:block>
+
+</html>

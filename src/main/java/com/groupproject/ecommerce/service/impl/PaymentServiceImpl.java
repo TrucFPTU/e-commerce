@@ -5,6 +5,7 @@ import com.groupproject.ecommerce.dto.request.PaymentRequest;
 import com.groupproject.ecommerce.dto.response.PaymentResponse;
 import com.groupproject.ecommerce.entity.Order;
 import com.groupproject.ecommerce.entity.PaymentTransaction;
+import com.groupproject.ecommerce.enums.OrderStatus;
 import com.groupproject.ecommerce.enums.PaymentProvider;
 import com.groupproject.ecommerce.enums.PaymentStatus;
 import com.groupproject.ecommerce.repository.OrderRepository;
@@ -50,20 +51,45 @@ public class PaymentServiceImpl implements PaymentService {
      * @return PaymentResponse chứa URL thanh toán
      */
     @Override
+    @Transactional
     public PaymentResponse createVNPayPayment(PaymentRequest request, String ipAddress) {
         try {
-            validateOrder(request.getOrderId());
-            String txnRef = generateTxnRef(request.getOrderId());
+            Order order = orderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Order not found with ID: " + request.getOrderId()));
+
+            // 🔥 1. SET ORDER → AWAITING_PAYMENT
+            order.setStatus(OrderStatus.AWAITING_PAYMENT);
+            orderRepository.save(order);
+
+            String txnRef = generateTxnRef(order.getOrderId());
             String paymentUrl = buildVNPayUrl(request, txnRef, ipAddress);
-            
-            log.info("Created VNPay payment URL for order: {}, txnRef: {}", request.getOrderId(), txnRef);
-            return new PaymentResponse("success", "Payment URL created", paymentUrl);
-            
+
+            PaymentTransaction tx = new PaymentTransaction();
+            tx.setOrder(order);
+            tx.setProvider(PaymentProvider.VNPAY);
+            tx.setTxnRef(txnRef);
+            tx.setAmount(BigDecimal.valueOf(request.getAmount()));
+            tx.setCurrency(CURRENCY_CODE);
+            tx.setStatus(PaymentStatus.PENDING);
+            tx.setCreatedAt(LocalDateTime.now());
+
+            paymentTransactionRepository.save(tx);
+
+            log.info("VNPay PENDING - orderId={}, txnRef={}", order.getOrderId(), txnRef);
+
+            return new PaymentResponse(
+                    "success",
+                    "Payment URL created",
+                    paymentUrl
+            );
+
         } catch (Exception e) {
-            log.error("Failed to create VNPay payment: {}", e.getMessage(), e);
-            return new PaymentResponse("error", "Failed to create payment: " + e.getMessage(), null);
+            log.error("Failed to create VNPay payment", e);
+            return new PaymentResponse("error", e.getMessage(), null);
         }
     }
+
 
     /**
      * Xử lý callback từ VNPay sau khi thanh toán
@@ -102,23 +128,24 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
-            List<PaymentTransaction> transactions = paymentTransactionRepository.findByOrder(order);
-            
+            List<PaymentTransaction> transactions = paymentTransactionRepository.findByOrderOrderByCreatedAtDesc(order);
+
             if (transactions.isEmpty()) {
                 return new PaymentResponse("error", "No payment transaction found", null);
             }
 
-            PaymentTransaction latestTransaction = transactions.get(transactions.size() - 1);
-            String status = latestTransaction.getStatus().name();
+            PaymentTransaction latest = transactions.get(0);
+            String status = latest.getStatus().name();
             String message = getStatusMessage(status);
 
             return new PaymentResponse(status, message, null);
-            
+
         } catch (Exception e) {
             log.error("Failed to get payment status for order {}: {}", orderId, e.getMessage(), e);
             return new PaymentResponse("error", "Failed to get payment status: " + e.getMessage(), null);
         }
     }
+
 
     // ==================== Private Helper Methods ====================
 
@@ -159,12 +186,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void addTimestampParams(Map<String, String> params) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        TimeZone vnTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar calendar = Calendar.getInstance(vnTimeZone);
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-        
+        formatter.setTimeZone(vnTimeZone);
+
         String createDate = formatter.format(calendar.getTime());
         params.put("vnp_CreateDate", createDate);
-        
+
         calendar.add(Calendar.MINUTE, PAYMENT_TIMEOUT_MINUTES);
         String expireDate = formatter.format(calendar.getTime());
         params.put("vnp_ExpireDate", expireDate);
@@ -192,16 +221,61 @@ public class PaymentServiceImpl implements PaymentService {
     private void savePaymentTransaction(Map<String, String> params) {
         String txnRef = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
-        Long orderId = extractOrderIdFromTxnRef(txnRef);
-        
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+        String transactionStatus = params.get("vnp_TransactionStatus"); // ✅ thêm
 
-        PaymentTransaction transaction = buildPaymentTransaction(order, params);
-        paymentTransactionRepository.save(transaction);
-        
-        log.info("Saved payment transaction for order: {}, status: {}", orderId, transaction.getStatus());
+        PaymentTransaction tx = paymentTransactionRepository.findByTxnRef(txnRef).orElseGet(() -> {
+            Long orderId = extractOrderIdFromTxnRef(txnRef);
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+            PaymentTransaction t = new PaymentTransaction();
+            t.setOrder(order);
+            t.setProvider(PaymentProvider.VNPAY);
+            t.setTxnRef(txnRef);
+            t.setCurrency(CURRENCY_CODE);
+            t.setStatus(PaymentStatus.PENDING);
+            t.setCreatedAt(LocalDateTime.now());
+            return t;
+        });
+
+        String amountStr = params.get("vnp_Amount");
+        if (amountStr != null && !amountStr.isEmpty()) {
+            tx.setAmount(new BigDecimal(amountStr).divide(new BigDecimal(VNPAY_AMOUNT_MULTIPLIER)));
+        }
+
+        tx.setResponseCode(responseCode);
+        tx.setTransactionNo(params.get("vnp_TransactionNo"));
+        tx.setBankCode(params.get("vnp_BankCode"));
+        tx.setCardType(params.get("vnp_CardType"));
+
+        // ✅ VNPAY success: ưu tiên vnp_TransactionStatus, fallback responseCode
+        boolean success =
+                SUCCESS_RESPONSE_CODE.equals(transactionStatus) ||
+                        (transactionStatus == null && SUCCESS_RESPONSE_CODE.equals(responseCode));
+
+        Order order = tx.getOrder();
+
+        if (success) {
+            tx.setStatus(PaymentStatus.SUCCESS);
+            setPaymentDate(tx, params.get("vnp_PayDate"));
+
+            // ✅ Thanh toán online thành công -> đơn rơi về PROCESSING cho staff xử lý
+            order.setStatus(OrderStatus.PROCESSING);
+        } else {
+            tx.setStatus(PaymentStatus.FAILED);
+
+            // ✅ Thất bại/pending -> vẫn là AWAITING_PAYMENT để retry
+            order.setStatus(OrderStatus.AWAITING_PAYMENT);
+        }
+
+        paymentTransactionRepository.save(tx);
+        orderRepository.save(order); // ✅ rất quan trọng: lưu order status
+
+        log.info("Saved/Updated payment transaction txnRef: {}, txStatus: {}, orderStatus: {}",
+                txnRef, tx.getStatus(), order.getStatus());
     }
+
+
 
     private PaymentTransaction buildPaymentTransaction(Order order, Map<String, String> params) {
         String responseCode = params.get("vnp_ResponseCode");
@@ -244,18 +318,17 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             List<String> fieldNames = new ArrayList<>(params.keySet());
             Collections.sort(fieldNames);
-            
+
             StringBuilder hashData = new StringBuilder();
             StringBuilder query = new StringBuilder();
 
             for (String fieldName : fieldNames) {
                 String fieldValue = params.get(fieldName);
                 if (fieldValue != null && !fieldValue.isEmpty()) {
-                    String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString());
-                    
+                    String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString());
+
                     hashData.append(fieldName).append('=').append(encodedValue);
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()))
-                         .append('=').append(encodedValue);
+                    query.append(fieldName).append('=').append(encodedValue);
 
                     if (!fieldName.equals(fieldNames.get(fieldNames.size() - 1))) {
                         query.append('&');
@@ -266,7 +339,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             String secureHash = VNPayConfig.hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
             return vnPayConfig.getVnpayUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
-            
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to build payment URL", e);
         }
@@ -289,10 +362,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private String getStatusMessage(String status) {
         return switch (status) {
+            case "PENDING" -> "Đang chờ thanh toán";
             case "SUCCESS" -> "Thanh toán thành công";
             case "FAILED" -> "Thanh toán thất bại";
             case "REFUNDED" -> "Đã hoàn tiền";
             default -> "Trạng thái không xác định";
         };
     }
+
 }

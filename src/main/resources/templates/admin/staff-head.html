@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="head">
+  <style>
+    /* Search Section */
+    .search-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-section p {
+      color: #666;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .search-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary { background: #007bff; color: #fff; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-success { background: #28a745; color: #fff; }
+    .btn-success:hover { background: #218838; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-danger { background: #dc3545; color: #fff; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* Staff Table Section */
+    .staff-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 18px;
+      color: #333;
+    }
+
+    .total-count {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f8f9fa;
+    }
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #dee2e6;
+      font-size: 14px;
+      color: #555;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* Role Badges */
+    .role-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .role-admin { background: #667eea; color: white; }
+    .role-staff { background: #28a745; color: white; }
+    .role-customer { background: #ffc107; color: #000; }
+
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 600px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      color: #333;
+    }
+
+    .close-btn {
+      font-size: 28px;
+      color: #999;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      color: #333;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+  </style>
+
+  <script>
+    const AdminStaff = {
+      /**
+       * Initialize staff management
+       */
+      init() {
+        this.initSearch();
+        this.initModal();
+      },
+
+      /**
+       * Initialize search functionality using AppUtils
+       */
+      initSearch() {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+          AppUtils.searchTable(e.target.value, '#staffTable', () => this.updateCount());
+        });
+      },
+
+      /**
+       * Initialize modal
+       */
+      initModal() {
+        const modal = document.getElementById('staffModal');
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            this.closeModal();
+          }
+        });
+      },
+
+      /**
+       * Open modal for adding new user
+       */
+      openAddModal() {
+        const form = document.getElementById('staffForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const passwordGroup = document.getElementById('passwordGroup');
+
+        form.reset();
+        form.userId.value = '';
+        modalTitle.textContent = 'Thêm Nhân viên Mới';
+
+        // Password is required for new user
+        passwordGroup.querySelector('input').required = true;
+        passwordGroup.querySelector('label').innerHTML = 'Mật khẩu <span style="color:red">*</span>';
+
+        document.getElementById('staffModal').style.display = 'block';
+      },
+
+      /**
+       * Open modal for editing user
+       */
+      async openEditModal(userId) {
+        const form = document.getElementById('staffForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const passwordGroup = document.getElementById('passwordGroup');
+
+        try {
+          const response = await fetch(`/admin/staff/${userId}`);
+          const user = await response.json();
+
+          if (!user) {
+            AppUtils.showAlert('Không tìm thấy nhân viên!', 'error');
+            return;
+          }
+
+          // Populate form
+          form.userId.value = user.userId;
+          form.email.value = user.email;
+          form.fullName.value = user.fullName;
+          form.password.value = '';
+
+          modalTitle.textContent = 'Chỉnh sửa Nhân viên';
+
+          // Password is optional for edit
+          passwordGroup.querySelector('input').required = false;
+          passwordGroup.querySelector('label').textContent = 'Mật khẩu mới (để trống nếu không đổi)';
+
+          document.getElementById('staffModal').style.display = 'block';
+
+        } catch (error) {
+          console.error('Error loading user:', error);
+          AppUtils.showAlert('Lỗi khi tải thông tin nhân viên!', 'error');
+        }
+      },
+
+      /**
+       * Close modal
+       */
+      closeModal() {
+        document.getElementById('staffModal').style.display = 'none';
+        document.getElementById('staffForm').reset();
+      },
+
+      /**
+       * Delete user with confirmation
+       */
+      deleteUser(userId, fullName) {
+        if (AppUtils.confirm(`Bạn có chắc muốn xóa nhân viên "${fullName}"?`)) {
+          document.getElementById('deleteForm_' + userId).submit();
+        }
+      },
+
+      /**
+       * Update count of visible rows
+       */
+      updateCount() {
+        const table = document.getElementById('staffTable');
+        const rows = table?.querySelectorAll('tbody tr');
+        const visibleRows = Array.from(rows || []).filter(row =>
+                row.style.display !== 'none'
+        );
+
+        const countElement = document.getElementById('staffCount');
+        if (countElement) {
+          countElement.textContent = visibleRows.length;
+        }
+      },
+
+      /**
+       * Get role badge HTML
+       */
+      getRoleBadge(role) {
+        const badges = {
+          'ADMIN': '<span class="role-badge role-admin">Admin</span>',
+          'STAFF': '<span class="role-badge role-staff">Nhân viên</span>',
+          'CUSTOMER': '<span class="role-badge role-customer">Khách hàng</span>'
+        };
+        return badges[role] || role;
+      }
+    };
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => AdminStaff.init());
+  </script>
+</th:block>
+
+</html>

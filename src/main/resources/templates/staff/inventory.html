@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="staff/layout :: layout(
+        'Kho sách (giá & tồn kho)',
+        'inventory',
+        ~{staff/inventory-head :: head},
+        ~{staff/inventory-body :: body},
+        ${user}
+      )">
+</html>
