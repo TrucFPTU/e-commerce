@@ -11,42 +11,91 @@
 
         <!-- Main Dashboard Content (hidden until data loads) -->
         <div id="main-content" style="display: none;">
+            <!-- Global Filter + Export -->
+            <div class="chart-container" style="margin-bottom: 20px;">
+                <div class="chart-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div>
+                        <h3 class="chart-title">🔎 Bộ lọc tổng</h3>
+                        <div class="chart-subtitle">Áp dụng cho toàn bộ dashboard</div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <select id="globalYear" style="padding:10px 12px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">-- Năm --</option>
+                        </select>
+
+                        <select id="globalMonth" style="padding:10px 12px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Cả năm</option>
+                            <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+                            <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+                            <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+                            <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                        </select>
+
+                        <button id="globalApplyBtn" style="padding:10px 14px; border-radius:10px; border:none; cursor:pointer;">
+                            Áp dụng
+                        </button>
+
+                        <button id="globalResetBtn" style="padding:10px 14px; border-radius:10px; border:1px solid #eee; background:#fff; cursor:pointer;">
+                            Reset
+                        </button>
+
+                        <button id="exportPdfBtn" style="padding:10px 14px; border-radius:10px; border:none; cursor:pointer;">
+                            Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
             <!-- Stats Cards -->
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-header">
-                        <div class="stat-label">Tổng đơn hàng</div>
-                        <div class="stat-icon">📦</div>
-                    </div>
-                    <div class="stat-value" id="totalOrders">0</div>
-                    <div class="stat-change">Tất cả đơn hàng trong hệ thống</div>
-                </div>
-                
-                <div class="stat-card success">
-                    <div class="stat-header">
-                        <div class="stat-label">Tổng doanh thu</div>
-                        <div class="stat-icon">💰</div>
-                    </div>
-                    <div class="stat-value" id="totalRevenue">0 đ</div>
-                    <div class="stat-change">Từ đơn hoàn thành & đang giao</div>
-                </div>
-                
-                <div class="stat-card warning">
-                    <div class="stat-header">
-                        <div class="stat-label">Tổng khách hàng</div>
-                        <div class="stat-icon">👥</div>
-                    </div>
-                    <div class="stat-value" id="totalCustomers">0</div>
-                    <div class="stat-change">Khách hàng đã đăng ký</div>
-                </div>
-                
-                <div class="stat-card danger">
+            <!-- KPI Row 1: 2 ô nhỏ (Tổng đơn hàng + Tổng khách hàng) -->
+            <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; margin-bottom: 20px;">
+                <div class="stat-card danger" style="min-height: 110px;">
                     <div class="stat-header">
                         <div class="stat-label">Tổng sản phẩm</div>
                         <div class="stat-icon">📚</div>
                     </div>
                     <div class="stat-value" id="totalProducts">0</div>
-                    <div class="stat-change">Sách trong kho</div>
+                    <div class="stat-change">Tổng sách hiện có trong hệ thống</div>
+                </div>
+
+                <div class="stat-card warning" style="min-height: 110px;">
+                    <div class="stat-header">
+                        <div class="stat-label">Tổng khách hàng</div>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-change">Tổng tài khoản đã đăng ký (All-time)</div>
+                </div>
+            </div>
+
+            <!-- KPI Row 2: mục riêng (Tổng doanh thu + Tổng sản phẩm) -->
+            <div class="chart-container" style="margin-bottom: 20px;">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">📌 Thống kê tổng quan khác</h3>
+                        <div class="chart-subtitle">Doanh thu theo kỳ lọc, sản phẩm là snapshot hệ thống</div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px;">
+                    <div class="stat-card success" style="min-height: 110px;">
+                        <div class="stat-header">
+                            <div class="stat-label">Tổng doanh thu</div>
+                            <div class="stat-icon">💰</div>
+                        </div>
+                        <div class="stat-value" id="totalRevenue">0 đ</div>
+                        <div class="stat-change">Theo kỳ lọc hiện tại</div>
+                    </div>
+                    <div class="stat-card primary" style="min-height: 110px;">
+                        <div class="stat-header">
+                            <div class="stat-label">Tổng đơn hàng</div>
+                            <div class="stat-icon">📦</div>
+                        </div>
+                        <div class="stat-value" id="totalOrders">0</div>
+                        <div class="stat-change">Theo kỳ lọc hiện tại</div>
+                    </div>
+
+
                 </div>
             </div>
 
@@ -55,7 +104,25 @@
                 <div class="chart-header">
                     <div>
                         <h3 class="chart-title">📊 Trạng thái đơn hàng</h3>
-                        <div class="chart-subtitle">Phân loại theo trạng thái xử lý</div>
+                        <div class="chart-subtitle" id="statsSubtitle">Phân loại theo trạng thái xử lý</div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <select id="statsYear" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Use Global</option>
+                        </select>
+
+                        <select id="statsMonth" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Cả năm</option>
+                            <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                            <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                            <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                            <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+                        </select>
+
+                        <button id="statsApplyBtn" style="padding:8px 10px; border-radius:10px; border:none; cursor:pointer;">
+                            Lọc
+                        </button>
                     </div>
                 </div>
                 <div class="order-status-grid">
@@ -92,10 +159,30 @@
                 <div class="chart-header">
                     <div>
                         <h3 class="chart-title">📈 Biểu đồ doanh thu</h3>
-                        <div class="chart-subtitle">Doanh thu 30 ngày gần nhất</div>
+                        <div class="chart-subtitle" id="revenueSubtitle">Doanh thu 30 ngày gần nhất</div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <select id="revenueYear" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Use Global</option>
+                        </select>
+
+                        <select id="revenueMonth" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Cả năm</option>
+                            <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                            <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                            <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                            <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+                        </select>
+
+                        <button id="revenueApplyBtn" style="padding:8px 10px; border-radius:10px; border:none; cursor:pointer;">
+                            Lọc
+                        </button>
                     </div>
                 </div>
-                <canvas id="revenueChart"></canvas>
+                <div id="revenueChartBody">
+                    <canvas id="revenueChart"></canvas>
+                </div>
             </div>
 
             <!-- Charts Grid -->
@@ -105,10 +192,30 @@
                     <div class="chart-header">
                         <div>
                             <h3 class="chart-title">🥧 Phân bổ đơn hàng</h3>
-                            <div class="chart-subtitle">Theo trạng thái</div>
+                            <div class="chart-subtitle" id="orderDistSubtitle">Theo trạng thái</div>
+                        </div>
+
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <select id="orderDistYear" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                                <option value="">Use Global</option>
+                            </select>
+
+                            <select id="orderDistMonth" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                                <option value="">Cả năm</option>
+                                <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                                <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                                <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                                <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+                            </select>
+
+                            <button id="orderDistApplyBtn" style="padding:8px 10px; border-radius:10px; border:none; cursor:pointer;">
+                                Lọc
+                            </button>
                         </div>
                     </div>
-                    <canvas id="orderStatusChart"></canvas>
+                    <div id="orderStatusChartBody">
+                        <canvas id="orderStatusChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Top Categories Chart -->
@@ -116,10 +223,30 @@
                     <div class="chart-header">
                         <div>
                             <h3 class="chart-title">📊 Top danh mục</h3>
-                            <div class="chart-subtitle">5 danh mục bán chạy nhất</div>
+                            <div class="chart-subtitle" id="topCategoriesSubtitle">5 danh mục bán chạy nhất</div>
+                        </div>
+
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <select id="topCategoriesYear" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                                <option value="">Use Global</option>
+                            </select>
+
+                            <select id="topCategoriesMonth" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                                <option value="">Cả năm</option>
+                                <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                                <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                                <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                                <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+                            </select>
+
+                            <button id="topCategoriesApplyBtn" style="padding:8px 10px; border-radius:10px; border:none; cursor:pointer;">
+                                Lọc
+                            </button>
                         </div>
                     </div>
-                    <canvas id="categoriesChart"></canvas>
+                    <div id="categoriesChartBody">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -128,18 +255,36 @@
                 <div class="chart-header">
                     <div>
                         <h3 class="chart-title">🏆 Top 10 sách bán chạy nhất</h3>
-                        <div class="chart-subtitle">Sắp xếp theo số lượng bán</div>
+                        <div class="chart-subtitle" id="topProductsSubtitle">Sắp xếp theo số lượng bán</div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <select id="topProductsYear" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Use Global</option>
+                        </select>
+
+                        <select id="topProductsMonth" style="padding:8px 10px; border-radius:10px; border:1px solid #eee;">
+                            <option value="">Cả năm</option>
+                            <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                            <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                            <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                            <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+                        </select>
+
+                        <button id="topProductsApplyBtn" style="padding:8px 10px; border-radius:10px; border:none; cursor:pointer;">
+                            Lọc
+                        </button>
                     </div>
                 </div>
                 <div class="table-wrapper">
                     <table class="top-items-table" id="topProductsTable">
                         <thead>
-                            <tr>
-                                <th style="width: 80px;">#</th>
-                                <th>Tên sách</th>
-                                <th style="width: 150px; text-align: right;">Số lượng bán</th>
-                                <th style="width: 180px; text-align: right;">Doanh thu</th>
-                            </tr>
+                        <tr>
+                            <th style="width: 80px;">#</th>
+                            <th>Tên sách</th>
+                            <th style="width: 150px; text-align: right;">Số lượng bán</th>
+                            <th style="width: 180px; text-align: right;">Doanh thu</th>
+                        </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -152,65 +297,74 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <script>
-        // Format currency
+        // ======================
+        // Format helpers
+        // ======================
         function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(Math.round(amount)) + ' đ';
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount || 0)) + ' đ';
         }
-
-        // Format number
         function formatNumber(num) {
-            return new Intl.NumberFormat('vi-VN').format(num);
+            return new Intl.NumberFormat('vi-VN').format(num || 0);
         }
 
-        // Load all dashboard data
-        async function loadDashboard() {
+        // ======================
+        // Filter state
+        // ======================
+        const globalFilter = { year: null, month: null };
+        const widgetFilter = {
+            stats: { year: null, month: null },
+            orderDistribution: { year: null, month: null }, // NEW
+            revenue: { year: null, month: null },
+            topProducts: { year: null, month: null },
+            topCategories: { year: null, month: null }
+        };
+
+        function getEffectiveFilter(key) {
+            const wf = widgetFilter[key];
+            if (!wf.year) return globalFilter; // Use Global
+            return wf;
+        }
+
+        function buildQuery(paramsObj) {
+            const p = new URLSearchParams();
+            Object.entries(paramsObj).forEach(([k, v]) => {
+                if (v !== null && v !== undefined && v !== '') p.append(k, v);
+            });
+            const qs = p.toString();
+            return qs ? `?${qs}` : '';
+        }
+
+        async function fetchJson(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Request failed: ' + url);
+            return res.json();
+        }
+
+        // ======================
+        // Chart instances
+        // ======================
+        let revenueChartInstance = null;
+        let orderStatusChartInstance = null;
+        let categoriesChartInstance = null;
+        let topCategoriesRequestId = 0;
+
+        // ======================
+        // Load dashboard
+        // ======================
+        async function loadDashboardAll() {
             try {
-                // Load stats
-                const statsResponse = await fetch('/admin/dashboard/api/stats');
-                if (!statsResponse.ok) throw new Error('Failed to load stats');
-                const stats = await statsResponse.json();
+                await loadStatsBlock();
+                await loadOrderDistributionBlock(); // NEW
+                await loadRevenueBlock();
+                await loadTopProductsBlock();
+                await loadTopCategoriesBlock();
 
-                // Update stats cards
-                document.getElementById('totalOrders').textContent = formatNumber(stats.totalOrders);
-                document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalRevenue);
-                document.getElementById('totalCustomers').textContent = formatNumber(stats.totalCustomers);
-                document.getElementById('totalProducts').textContent = formatNumber(stats.totalProducts);
-
-                // Update order status
-                document.getElementById('pendingOrders').textContent = formatNumber(stats.awaitingPaymentOrders);
-                document.getElementById('processingOrders').textContent = formatNumber(stats.processingOrders);
-                document.getElementById('shippedOrders').textContent = formatNumber(stats.shippingOrders);
-                document.getElementById('completedOrders').textContent = formatNumber(stats.completedOrders);
-                document.getElementById('cancelledOrders').textContent = formatNumber(stats.cancelledOrders);
-
-                // Load revenue chart
-                const revenueResponse = await fetch('/admin/dashboard/api/revenue?days=30');
-                if (!revenueResponse.ok) throw new Error('Failed to load revenue data');
-                const revenueData = await revenueResponse.json();
-                createRevenueChart(revenueData);
-
-                // Create order status pie chart
-                createOrderStatusChart(stats);
-
-                // Load top products
-                const productsResponse = await fetch('/admin/dashboard/api/top-products?limit=10');
-                if (!productsResponse.ok) throw new Error('Failed to load top products');
-                const topProducts = await productsResponse.json();
-                populateTopProductsTable(topProducts);
-
-                // Load top categories
-                const categoriesResponse = await fetch('/admin/dashboard/api/top-categories?limit=5');
-                if (!categoriesResponse.ok) throw new Error('Failed to load top categories');
-                const topCategories = await categoriesResponse.json();
-                createCategoriesChart(topCategories);
-
-                // Hide loading, show content
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
-                document.getElementById('loading-spinner').innerHTML = 
+                document.getElementById('loading-spinner').innerHTML =
                     '<div class="error-state">' +
                     '<div class="error-state-icon">❌</div>' +
                     '<p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Lỗi khi tải dữ liệu</p>' +
@@ -219,26 +373,142 @@
             }
         }
 
-        // Create revenue line chart
-        function createRevenueChart(data) {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            
-            if (data.length === 0) {
-                ctx.canvas.parentElement.innerHTML = 
+        async function loadStatsBlock() {
+            const f = getEffectiveFilter('stats');
+            const statsUrl = '/admin/dashboard/api/stats' + buildQuery({ year: f.year, month: f.month });
+            const stats = await fetchJson(statsUrl);
+
+            document.getElementById('totalOrders').textContent = formatNumber(stats.totalOrders);
+            document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalRevenue);
+            document.getElementById('totalCustomers').textContent = formatNumber(stats.totalCustomers);
+            document.getElementById('totalProducts').textContent = formatNumber(stats.totalProducts);
+
+            document.getElementById('pendingOrders').textContent = formatNumber(stats.awaitingPaymentOrders);
+            document.getElementById('processingOrders').textContent = formatNumber(stats.processingOrders);
+            document.getElementById('shippedOrders').textContent = formatNumber(stats.shippingOrders);
+            document.getElementById('completedOrders').textContent = formatNumber(stats.completedOrders);
+            document.getElementById('cancelledOrders').textContent = formatNumber(stats.cancelledOrders);
+
+        }
+
+        async function loadOrderDistributionBlock() {
+            const f = getEffectiveFilter('orderDistribution');
+            const statsUrl = '/admin/dashboard/api/stats' + buildQuery({ year: f.year, month: f.month });
+            const stats = await fetchJson(statsUrl);
+
+            createOrderStatusChart(stats);
+            updateOrderDistSubtitle(f);
+        }
+
+        function updateOrderDistSubtitle(f) {
+            const el = document.getElementById('orderDistSubtitle');
+            if (!el) return;
+
+            if (!f.year) {
+                el.textContent = 'Theo trạng thái (Use Global)';
+                return;
+            }
+            if (f.month) {
+                el.textContent = `Theo trạng thái - Tháng ${f.month}/${f.year}`;
+                return;
+            }
+            el.textContent = `Theo trạng thái - Năm ${f.year}`;
+        }
+
+        async function loadRevenueBlock() {
+            const f = getEffectiveFilter('revenue');
+            const revenueUrl = '/admin/dashboard/api/revenue' + buildQuery({ year: f.year, month: f.month, days: 30 });
+            const data = await fetchJson(revenueUrl);
+            createRevenueChart(data, f);
+            updateRevenueSubtitle(f);
+        }
+
+        async function loadTopProductsBlock() {
+            const f = getEffectiveFilter('topProducts');
+            const url = '/admin/dashboard/api/top-products' + buildQuery({ limit: 10, year: f.year, month: f.month });
+            const data = await fetchJson(url);
+            populateTopProductsTable(data);
+        }
+
+        async function loadTopCategoriesBlock() {
+            const reqId = ++topCategoriesRequestId;
+
+            const f = getEffectiveFilter('topCategories');
+            const url = '/admin/dashboard/api/top-categories' + buildQuery({ limit: 5, year: f.year, month: f.month });
+
+            const data = await fetchJson(url);
+
+            // Nếu có request mới hơn đã chạy sau request này thì bỏ qua kết quả cũ
+            if (reqId !== topCategoriesRequestId) return;
+
+            createCategoriesChart(data);
+        }
+
+        function updateRevenueSubtitle(f) {
+            const el = document.getElementById('revenueSubtitle');
+            if (!el) return;
+
+            if (!f.year) {
+                el.textContent = 'Doanh thu 30 ngày gần nhất';
+                return;
+            }
+            if (f.month) {
+                el.textContent = `Doanh thu tháng ${f.month}/${f.year}`;
+                return;
+            }
+            el.textContent = `Doanh thu năm ${f.year}`;
+        }
+
+        // ======================
+        // Charts
+        // ======================
+        function ensureCanvas(bodyId, canvasId) {
+            const body = document.getElementById(bodyId);
+            if (!body) return null;
+
+            let canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                body.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+                canvas = document.getElementById(canvasId);
+            }
+            return canvas;
+        }
+        function createRevenueChart(data, filter) {
+            // Destroy chart cũ
+            if (revenueChartInstance) {
+                revenueChartInstance.destroy();
+                revenueChartInstance = null;
+            }
+
+            // Empty state (xoá body) -> lần sau sẽ restore canvas bằng ensureCanvas
+            if (!data || data.length === 0) {
+                document.getElementById('revenueChartBody').innerHTML =
                     '<div class="empty-state">' +
                     '<div class="empty-state-icon">📊</div>' +
                     '<div class="empty-state-text">Chưa có dữ liệu doanh thu</div>' +
                     '</div>';
                 return;
             }
-            
-            new Chart(ctx, {
+
+            // Ensure canvas tồn tại (trường hợp lần trước empty đã xoá canvas)
+            const canvas = ensureCanvas('revenueChartBody', 'revenueChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const isYearOnly = !!(filter.year && !filter.month);
+
+            const labels = data.map(d => {
+                const dt = new Date(d.date);
+                if (isYearOnly) {
+                    return (dt.getMonth() + 1) + '/' + dt.getFullYear();
+                }
+                return dt.getDate() + '/' + (dt.getMonth() + 1);
+            });
+
+            revenueChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(d => {
-                        const date = new Date(d.date);
-                        return date.getDate() + '/' + (date.getMonth() + 1);
-                    }),
+                    labels,
                     datasets: [{
                         label: 'Doanh thu (VNĐ)',
                         data: data.map(d => d.revenue),
@@ -256,32 +526,21 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
+                    interaction: { intersect: false, mode: 'index' },
                     plugins: {
                         legend: {
                             display: true,
                             position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 15,
-                                font: { size: 13, weight: '600' }
-                            }
+                            labels: { usePointStyle: true, padding: 15, font: { size: 13, weight: '600' } }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 12,
-                            titleFont: { size: 14, weight: '600' },
-                            bodyFont: { size: 13 },
                             callbacks: {
-                                label: function(context) {
-                                    return 'Doanh thu: ' + formatCurrency(context.parsed.y);
-                                },
+                                label: function(context) { return 'Doanh thu: ' + formatCurrency(context.parsed.y); },
                                 afterLabel: function(context) {
                                     const item = data[context.dataIndex];
-                                    return 'Đơn hàng: ' + item.orderCount;
+                                    return 'Đơn hàng: ' + (item.orderCount || 0);
                                 }
                             }
                         }
@@ -289,48 +548,44 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
                             ticks: {
                                 font: { size: 12 },
                                 callback: function(value) {
-                                    if (value >= 1000000) {
-                                        return (value / 1000000) + 'M đ';
-                                    }
+                                    if (value >= 1000000) return (value / 1000000) + 'M đ';
                                     return formatCurrency(value);
                                 }
                             }
                         },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: { size: 12 }
-                            }
-                        }
+                        x: { grid: { display: false }, ticks: { font: { size: 12 } } }
                     }
                 }
             });
         }
 
-        // Create order status pie chart
         function createOrderStatusChart(stats) {
-            const ctx = document.getElementById('orderStatusChart').getContext('2d');
-            const total = stats.awaitingPaymentOrders + stats.processingOrders + stats.shippingOrders + 
-                         stats.completedOrders + stats.cancelledOrders;
-            
+            if (orderStatusChartInstance) {
+                orderStatusChartInstance.destroy();
+                orderStatusChartInstance = null;
+            }
+
+            const total = (stats.awaitingPaymentOrders || 0) + (stats.processingOrders || 0) + (stats.shippingOrders || 0) +
+                (stats.completedOrders || 0) + (stats.cancelledOrders || 0);
+
             if (total === 0) {
-                ctx.canvas.parentElement.innerHTML = 
+                document.getElementById('orderStatusChartBody').innerHTML =
                     '<div class="empty-state">' +
                     '<div class="empty-state-icon">🥧</div>' +
                     '<div class="empty-state-text">Chưa có đơn hàng</div>' +
                     '</div>';
                 return;
             }
-            
-            new Chart(ctx, {
+
+            const canvas = ensureCanvas('orderStatusChartBody', 'orderStatusChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            orderStatusChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Chờ thanh toán', 'Đang xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
@@ -359,11 +614,7 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 15,
-                                font: { size: 12, weight: '500' }
-                            }
+                            labels: { usePointStyle: true, padding: 15, font: { size: 12, weight: '500' } }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -382,20 +633,30 @@
             });
         }
 
-        // Create categories bar chart
         function createCategoriesChart(categories) {
-            const ctx = document.getElementById('categoriesChart').getContext('2d');
-            
-            if (categories.length === 0) {
-                ctx.canvas.parentElement.innerHTML = 
+            // Destroy chart cũ trước
+            if (categoriesChartInstance) {
+                categoriesChartInstance.destroy();
+                categoriesChartInstance = null;
+            }
+
+            // Empty => show empty state (xoá canvas)
+            if (!categories || categories.length === 0) {
+                document.getElementById('categoriesChartBody').innerHTML =
                     '<div class="empty-state">' +
                     '<div class="empty-state-icon">📊</div>' +
                     '<div class="empty-state-text">Chưa có dữ liệu danh mục</div>' +
                     '</div>';
                 return;
             }
-            
-            new Chart(ctx, {
+
+            // Restore canvas nếu trước đó empty-state đã xoá canvas
+            const canvas = ensureCanvas('categoriesChartBody', 'categoriesChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            categoriesChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: categories.map(c => c.categoryName),
@@ -413,16 +674,12 @@
                     maintainAspectRatio: true,
                     indexAxis: 'y',
                     plugins: {
-                        legend: {
-                            display: false
-                        },
+                        legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: 12,
                             callbacks: {
-                                label: function(context) {
-                                    return 'Doanh thu: ' + formatCurrency(context.parsed.x);
-                                },
+                                label: function(context) { return 'Doanh thu: ' + formatCurrency(context.parsed.x); },
                                 afterLabel: function(context) {
                                     const item = categories[context.dataIndex];
                                     return 'Số lượng: ' + formatNumber(item.totalSold);
@@ -433,67 +690,170 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
                             ticks: {
                                 font: { size: 11 },
                                 callback: function(value) {
-                                    if (value >= 1000000) {
-                                        return (value / 1000000) + 'M';
-                                    }
+                                    if (value >= 1000000) return (value / 1000000) + 'M';
                                     return value;
                                 }
                             }
                         },
-                        y: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: { size: 12, weight: '500' }
-                            }
-                        }
+                        y: { grid: { display: false }, ticks: { font: { size: 12, weight: '500' } } }
                     }
                 }
             });
         }
-
-        // Populate top products table
+        // ======================
+        // Table
+        // ======================
         function populateTopProductsTable(products) {
             const tbody = document.querySelector('#topProductsTable tbody');
             tbody.innerHTML = '';
-            
-            if (products.length === 0) {
+
+            if (!products || products.length === 0) {
                 tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px;">
-                            <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">📚</div>
-                            <div style="color: #999;">Chưa có dữ liệu sản phẩm bán chạy</div>
-                        </td>
-                    </tr>
-                `;
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">📚</div>
+            <div style="color: #999;">Chưa có dữ liệu sản phẩm bán chạy</div>
+          </td>
+        </tr>
+      `;
                 return;
             }
-            
+
             products.forEach((product, index) => {
                 const badge = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
                 const row = `
-                    <tr>
-                        <td>${badge ? '<span class="badge ' + badge + '">#' + (index + 1) + '</span>' : '#' + (index + 1)}</td>
-                        <td style="font-weight: 500;">${product.productName}</td>
-                        <td style="text-align: right; font-weight: 600;">${formatNumber(product.totalSold)}</td>
-                        <td style="text-align: right; color: #4CAF50; font-weight: 600;">${formatCurrency(product.totalRevenue)}</td>
-                    </tr>
-                `;
+        <tr>
+          <td>${badge ? '<span class="badge ' + badge + '">#' + (index + 1) + '</span>' : '#' + (index + 1)}</td>
+          <td style="font-weight: 500;">${product.productName}</td>
+          <td style="text-align: right; font-weight: 600;">${formatNumber(product.totalSold)}</td>
+          <td style="text-align: right; color: #4CAF50; font-weight: 600;">${formatCurrency(product.totalRevenue)}</td>
+        </tr>
+      `;
                 tbody.innerHTML += row;
             });
         }
 
+        // ======================
+        // Init filter UI
+        // ======================
+        function initYearSelect(selectId, back = 5, forward = 1) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
 
+            const nowYear = new Date().getFullYear();
+            for (let y = nowYear + forward; y >= nowYear - back; y--) {
+                const opt = document.createElement('option');
+                opt.value = String(y);
+                opt.textContent = String(y);
+                sel.appendChild(opt);
+            }
+        }
 
-        // Load dashboard when page loads
-        document.addEventListener('DOMContentLoaded', loadDashboard);
+        function readFilter(yearId, monthId) {
+            const y = document.getElementById(yearId)?.value || '';
+            const m = document.getElementById(monthId)?.value || '';
+            return {
+                year: y ? parseInt(y, 10) : null,
+                month: m ? parseInt(m, 10) : null
+            };
+        }
+
+        function bindGlobalToolbar() {
+            initYearSelect('globalYear');
+
+            document.getElementById('globalApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('globalYear', 'globalMonth');
+                globalFilter.year = f.year;
+                globalFilter.month = f.month;
+                await loadDashboardAll();
+            });
+
+            document.getElementById('globalResetBtn')?.addEventListener('click', async () => {
+                globalFilter.year = null;
+                globalFilter.month = null;
+
+                document.getElementById('globalYear').value = '';
+                document.getElementById('globalMonth').value = '';
+
+                Object.keys(widgetFilter).forEach(k => {
+                    widgetFilter[k].year = null;
+                    widgetFilter[k].month = null;
+                });
+
+                await loadDashboardAll();
+            });
+
+            document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
+                const qs = buildQuery({ year: globalFilter.year, month: globalFilter.month });
+                window.location.href = '/admin/dashboard/export.pdf' + qs;
+            });
+        }
+
+        function bindRevenueWidgetFilter() {
+            initYearSelect('revenueYear');
+
+            document.getElementById('revenueApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('revenueYear', 'revenueMonth');
+                widgetFilter.revenue.year = f.year;   // null => Use Global
+                widgetFilter.revenue.month = f.month;
+                await loadRevenueBlock();
+            });
+        }
+        function bindStatsWidgetFilter() {
+            initYearSelect('statsYear');
+            document.getElementById('statsApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('statsYear', 'statsMonth');
+                widgetFilter.stats.year = f.year;   // null => Use Global
+                widgetFilter.stats.month = f.month;
+                await loadStatsBlock();
+            });
+        }
+        function bindOrderDistWidgetFilter() {
+            initYearSelect('orderDistYear'); // nhớ initYearSelect của bạn đã sửa forward=0 rồi nhé
+
+            document.getElementById('orderDistApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('orderDistYear', 'orderDistMonth');
+                widgetFilter.orderDistribution.year = f.year;   // null => Use Global
+                widgetFilter.orderDistribution.month = f.month;
+                await loadOrderDistributionBlock();
+            });
+        }
+
+        function bindTopProductsWidgetFilter() {
+            initYearSelect('topProductsYear');
+            document.getElementById('topProductsApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('topProductsYear', 'topProductsMonth');
+                widgetFilter.topProducts.year = f.year;
+                widgetFilter.topProducts.month = f.month;
+                await loadTopProductsBlock();
+            });
+        }
+
+        function bindTopCategoriesWidgetFilter() {
+            initYearSelect('topCategoriesYear');
+            document.getElementById('topCategoriesApplyBtn')?.addEventListener('click', async () => {
+                const f = readFilter('topCategoriesYear', 'topCategoriesMonth');
+                widgetFilter.topCategories.year = f.year;
+                widgetFilter.topCategories.month = f.month;
+                await loadTopCategoriesBlock();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindGlobalToolbar();
+
+            bindStatsWidgetFilter();
+            bindOrderDistWidgetFilter();
+            bindRevenueWidgetFilter();
+            bindTopProductsWidgetFilter();
+            bindTopCategoriesWidgetFilter();
+
+            loadDashboardAll();
+        });
     </script>
 </th:block>
 

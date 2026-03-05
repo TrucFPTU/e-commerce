@@ -6,19 +6,17 @@ import com.groupproject.ecommerce.enums.Role;
 import com.groupproject.ecommerce.service.DashboardService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Controller for Admin Dashboard / Statistics
- */
 @Controller
 @RequestMapping("/admin/dashboard")
 @RequiredArgsConstructor
@@ -29,9 +27,6 @@ public class AdminDashboardController {
 
     private final DashboardService dashboardService;
 
-    /**
-     * Hiển thị trang dashboard
-     */
     @GetMapping
     public String showDashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute(LOGIN_USER_KEY);
@@ -42,73 +37,98 @@ public class AdminDashboardController {
         model.addAttribute("user", user);
         model.addAttribute("pageTitle", "Thống kê");
         model.addAttribute("activeMenu", "dashboard");
-
         return "admin/dashboard";
     }
 
-    /**
-     * API: Lấy thống kê tổng quan
-     */
     @GetMapping("/api/stats")
     @ResponseBody
-    public ResponseEntity<DashboardStatsDto> getStats(HttpSession session) {
+    public ResponseEntity<DashboardStatsDto> getStats(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            HttpSession session
+    ) {
         User user = (User) session.getAttribute(LOGIN_USER_KEY);
         if (user == null || user.getRole() != Role.ADMIN) {
             return ResponseEntity.status(401).build();
         }
 
-        DashboardStatsDto stats = dashboardService.getDashboardStats();
+        DashboardStatsDto stats = dashboardService.getDashboardStats(year, month);
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * API: Lấy doanh thu theo ngày
-     */
     @GetMapping("/api/revenue")
     @ResponseBody
     public ResponseEntity<List<RevenueByDateDto>> getRevenue(
-            @RequestParam(defaultValue = "30") int days,
-            HttpSession session) {
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(defaultValue = "30") int days, // fallback nếu không có year/month
+            HttpSession session
+    ) {
         User user = (User) session.getAttribute(LOGIN_USER_KEY);
         if (user == null || user.getRole() != Role.ADMIN) {
             return ResponseEntity.status(401).build();
         }
 
-        List<RevenueByDateDto> data = dashboardService.getRevenueByDays(days);
+        List<RevenueByDateDto> data = dashboardService.getRevenue(year, month, days);
         return ResponseEntity.ok(data);
     }
 
-    /**
-     * API: Lấy top sản phẩm bán chạy
-     */
     @GetMapping("/api/top-products")
     @ResponseBody
     public ResponseEntity<List<TopProductDto>> getTopProducts(
             @RequestParam(defaultValue = "10") int limit,
-            HttpSession session) {
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            HttpSession session
+    ) {
         User user = (User) session.getAttribute(LOGIN_USER_KEY);
         if (user == null || user.getRole() != Role.ADMIN) {
             return ResponseEntity.status(401).build();
         }
 
-        List<TopProductDto> data = dashboardService.getTopProducts(limit);
+        List<TopProductDto> data = dashboardService.getTopProducts(limit, year, month);
         return ResponseEntity.ok(data);
     }
 
-    /**
-     * API: Lấy top danh mục bán chạy
-     */
     @GetMapping("/api/top-categories")
     @ResponseBody
     public ResponseEntity<List<TopCategoryDto>> getTopCategories(
             @RequestParam(defaultValue = "10") int limit,
-            HttpSession session) {
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            HttpSession session
+    ) {
         User user = (User) session.getAttribute(LOGIN_USER_KEY);
         if (user == null || user.getRole() != Role.ADMIN) {
             return ResponseEntity.status(401).build();
         }
 
-        List<TopCategoryDto> data = dashboardService.getTopCategories(limit);
+        List<TopCategoryDto> data = dashboardService.getTopCategories(limit, year, month);
         return ResponseEntity.ok(data);
+    }
+
+    /**
+     * Export full dashboard report PDF theo GLOBAL filter (year/month)
+     */
+    @GetMapping(value = "/export.pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> exportPdf(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            HttpSession session
+    ) {
+        User user = (User) session.getAttribute(LOGIN_USER_KEY);
+        if (user == null || user.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(401).build();
+        }
+
+        byte[] pdfBytes = dashboardService.exportDashboardPdf(year, month);
+
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"));
+        String filename = "dashboard_report_" + time + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
     }
 }
